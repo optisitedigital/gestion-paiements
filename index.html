@@ -1,605 +1,1012 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OptiSchool Portal - Contrôle de Solvabilité Direct</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Payment Manager - RDC</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+* { font-family: 'Inter', sans-serif; }
+body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%); min-height: 100vh; overflow-x: hidden; }
+.glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); }
+.glass-dark { background: rgba(10,14,39,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+.gradient-text { background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gradient-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s; }
+.gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(16,185,129,0.4); }
+.gradient-btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); transition: all 0.3s; }
+.gradient-btn-blue:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(59,130,246,0.4); }
+.card-hover { transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.card-hover:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
+.fade-in { animation: fadeIn 0.6s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.slide-in { animation: slideIn 0.5s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+.float { animation: float 6s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+.pulse-ring { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.7); } 70% { box-shadow: 0 0 0 20px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+.spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; animation: blob 15s infinite; }
+@keyframes blob { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(100px,-50px) scale(1.1); } 66% { transform: translate(-50px,50px) scale(0.9); } }
+.input-modern { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; text-transform: uppercase; }
+.input-modern:focus { background: rgba(255,255,255,0.1); border-color: #10b981; outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.2); }
+.sidebar-item { transition: all 0.3s; }
+.sidebar-item:hover, .sidebar-item.active { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(59,130,246,0.2)); border-left: 4px solid #10b981; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 10px; }
+.table-modern tbody tr { transition: all 0.3s; }
+.table-modern tbody tr:hover { background: rgba(16,185,129,0.1); transform: scale(1.01); }
+.badge-paid { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.badge-partial { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+.badge-unpaid { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.modal { animation: modalIn 0.3s ease-out; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+.stat-number { font-variant-numeric: tabular-nums; }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
+<body class="text-white">
 
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm w-full"></div>
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="blob bg-green-500 w-96 h-96 top-0 -left-20"></div>
+    <div class="blob bg-blue-500 w-96 h-96 top-1/2 -right-20" style="animation-delay: 5s;"></div>
+    <div class="blob bg-indigo-500 w-96 h-96 bottom-0 left-1/3" style="animation-delay: 10s;"></div>
+</div>
 
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="toggleView('public')">
-                <div class="bg-blue-600 p-2 rounded-xl text-white font-bold text-lg">🏫</div>
+<div id="homePage" class="relative z-10 min-h-screen">
+    <nav class="glass-dark sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl gradient-btn flex items-center justify-center pulse-ring">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                </div>
                 <div>
-                    <span class="text-base font-black tracking-wider block">OptiSchool <span class="text-blue-500">RDC</span></span>
-                    <span class="text-[10px] uppercase text-slate-400 font-bold tracking-widest block">Fichier Central Connecté</span>
+                    <h1 class="text-xl font-bold">School Payment</h1>
+                    <p class="text-xs text-gray-400">Manager RDC</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Mode En Direct
-                </span>
-                <button id="btn-top-action" onclick="toggleView('login')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold border border-slate-700 transition">
-                    Espace Comptabilité
+            <button onclick="showLoginModal()" class="gradient-btn-blue px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+                <i class="fas fa-lock"></i>
+                <span class="hidden sm:inline">Administration</span>
+            </button>
+        </div>
+    </nav>
+
+    <section class="px-6 py-16 max-w-7xl mx-auto">
+        <div class="text-center fade-in">
+            <div class="inline-block float mb-6">
+                <div class="w-24 h-24 rounded-2xl gradient-btn flex items-center justify-center mx-auto shadow-2xl">
+                    <i class="fas fa-school text-5xl"></i>
+                </div>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black mb-6">
+                <span class="gradient-text">School Payment</span><br>
+                <span class="text-white">Manager</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-4">Smart student payment tracking system for schools</p>
+            <p class="text-md text-gray-400 mb-12">Solution moderne adaptée aux écoles de la RDC 🇨🇩</p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <button onclick="showSearchById()" class="gradient-btn px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                    <i class="fas fa-id-card"></i> Recherche par ID
+                </button>
+                <button onclick="showSearchByClass()" class="gradient-btn-blue px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                    <i class="fas fa-users"></i> Recherche par Classe
                 </button>
             </div>
         </div>
-    </header>
 
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
-
-        <div id="view-public" class="space-y-8">
-            
-            <div class="text-center max-w-xl mx-auto space-y-2">
-                <h2 class="text-2xl font-extrabold text-white tracking-tight">Système de Vérification Immédiate</h2>
-                <p class="text-xs text-slate-400">Contrôlez instantanément la situation financière des élèves enregistrés sur le serveur.</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-user-graduate text-3xl text-green-400"></i>
+                    <span class="text-xs text-gray-400">TOTAL</span>
+                </div>
+                <div class="stat-number text-3xl font-black" id="statStudents">0</div>
+                <p class="text-sm text-gray-400 mt-1">Élèves enregistrés</p>
             </div>
-
-            <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-                
-                <div class="flex border-b border-slate-800 mb-6 text-xs sm:text-sm font-bold">
-                    <button onclick="switchSearchTab('student')" id="tab-student" class="flex-1 text-center pb-3 border-b-2 border-blue-500 text-white transition">
-                        👤 Recherche Individuelle (Par ID)
-                    </button>
-                    <button onclick="switchSearchTab('class')" id="tab-class" class="flex-1 text-center pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
-                        🏫 Recherche Collective (Par Classe + Montant)
-                    </button>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-money-bill-wave text-3xl text-blue-400"></i>
+                    <span class="text-xs text-gray-400">FC</span>
                 </div>
-
-                <div id="panel-student" class="space-y-4">
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="text" id="input-search-id" placeholder="Tapez l'identifiant (Ex: STU001)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white uppercase font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="triggerStudentSearch()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition">Vérifier l'Élève</button>
-                    </div>
+                <div class="stat-number text-3xl font-black" id="statPaid">0</div>
+                <p class="text-sm text-gray-400 mt-1">Montant total payé</p>
+            </div>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+                    <span class="text-xs text-gray-400">RETARD</span>
                 </div>
-
-                <div id="panel-class" class="hidden space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Nom de la classe</label>
-                            <input type="text" id="input-search-class" placeholder="Ex: 4HSC A, 6e..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white uppercase font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Montant minimum perçu ($)</label>
-                            <input type="number" id="input-search-amount" placeholder="Ex: 450" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <button onclick="triggerClassSearch()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3 rounded-xl transition">Rechercher les élèves en règle</button>
+                <div class="stat-number text-3xl font-black" id="statLate">0</div>
+                <p class="text-sm text-gray-400 mt-1">Élèves en retard</p>
+            </div>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-chalkboard text-3xl text-indigo-400"></i>
+                    <span class="text-xs text-gray-400">CLASSES</span>
                 </div>
-
-                <div id="display-results" class="hidden mt-6 pt-6 border-t border-slate-800"></div>
-
+                <div class="stat-number text-3xl font-black" id="statClasses">0</div>
+                <p class="text-sm text-gray-400 mt-1">Classes enregistrées</p>
             </div>
         </div>
 
-        <div id="view-login" class="hidden max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 class="text-base font-bold text-center text-white uppercase">Accès Sécurisé Direction</h3>
-            <form onsubmit="handleLogin(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-400 mb-1 font-semibold">Identifiant Email</label>
-                    <input type="email" id="admin-email" required class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-white">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-semibold">Mot de passe</label>
-                    <input type="password" id="admin-password" required class="w-full bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-white">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="toggleView('public')" class="w-1/2 bg-slate-800 text-slate-300 py-2 rounded-lg font-semibold">Retour</button>
-                    <button type="submit" class="w-1/2 bg-blue-600 text-white py-2 rounded-lg font-bold">Se Connecter</button>
-                </div>
-            </form>
+        <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i class="fas fa-id-card text-green-400"></i> Recherche par ID Directe
+                </h2>
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input id="searchIdInput" type="text" placeholder="Entrer l'ID de l'élève (Ex: STU001)..." class="input-modern flex-1 px-6 py-4 rounded-xl text-white placeholder-gray-400 font-mono">
+                <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+            <div id="searchResultById" class="mt-8"></div>
         </div>
 
-        <div id="view-admin" class="hidden space-y-6">
-            <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+        <div id="searchByClassSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i class="fas fa-users text-blue-400"></i> Filtrage par Classe & Solvabilité
+                </h2>
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <h2 class="text-lg font-bold text-white">Console d'Administration Globale</h2>
-                    <p class="text-xs text-slate-400">Ajoutez, modifiez ou supprimez les fiches du Google Sheet</p>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Sélectionner la classe</label>
+                    <select id="classSelect" onchange="searchByClass()" class="input-modern w-full px-6 py-4 rounded-xl text-white bg-slate-900 border border-white/10">
+                        <option value="">-- Sélectionner une classe --</option>
+                    </select>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="openCrudModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">＋ Nouvel Élève</button>
-                    <button onclick="handleLogout()" class="bg-slate-800 text-rose-400 text-xs font-bold px-3 py-2 rounded-xl transition">Quitter</button>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Montant Perçu Minimum ($ ou FC)</label>
+                    <input id="amountFilter" type="number" placeholder="Ex: 450 (Affiche uniquement ceux qui ont payé >=)" oninput="searchByClass()" class="input-modern w-full px-6 py-4 rounded-xl text-white placeholder-gray-400">
                 </div>
             </div>
+            <div id="searchResultByClass"></div>
+        </div>
+    </section>
+</div>
 
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <input type="text" id="admin-search-box" oninput="filterAdminTable()" placeholder="Rechercher par nom ou code ID d'élève..." class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-white">
-                <select id="admin-class-box" onchange="filterAdminTable()" class="bg-slate-950 border border-slate-700 p-2.5 rounded-lg text-white"><option value="ALL">Toutes les classes</option></select>
+<div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+    <div class="glass-dark rounded-3xl p-8 max-w-md w-full modal">
+        <div class="text-center mb-6">
+            <div class="w-20 h-20 rounded-2xl gradient-btn-blue flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shield-alt text-3xl"></i>
             </div>
+            <h2 class="text-2xl font-bold">Administration</h2>
+            <p class="text-gray-400 text-sm">Connectez-vous pour continuer</p>
+        </div>
+        <form onsubmit="adminLogin(event)" class="space-y-4">
+            <input id="loginEmail" type="email" placeholder="Email administrateur" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400" style="text-transform: none;">
+            <input id="loginPassword" type="password" placeholder="Mot de passe" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400" style="text-transform: none;">
+            <div id="loginError" class="hidden text-red-400 text-sm text-center"></div>
+            <button type="submit" class="gradient-btn w-full py-3 rounded-xl font-bold">Se connecter</button>
+            <button type="button" onclick="hideLoginModal()" class="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white">Annuler</button>
+        </form>
+        <p class="text-xs text-gray-500 text-center mt-4">Dossier Direction: admin@school.cd / admin123</p>
+    </div>
+</div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+<div id="adminDashboard" class="hidden relative z-10 min-h-screen flex">
+    <aside class="w-64 glass-dark fixed h-screen overflow-y-auto hidden lg:block">
+        <div class="p-6 border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-sm">Admin Panel</h2>
+                    <p class="text-xs text-gray-400">School Manager</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4 space-y-2">
+            <a onclick="showAdminSection('dashboard')" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a onclick="showAdminSection('students')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-users"></i> Élèves</a>
+            <a onclick="showAdminSection('payments')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-money-bill"></i> Paiements</a>
+            <a onclick="showAdminSection('classes')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chalkboard"></i> Classes</a>
+            <a onclick="showAdminSection('reports')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-file-export"></i> Rapports</a>
+            <button onclick="adminLogout()" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 mt-8"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 lg:ml-64 p-6">
+        <div class="lg:hidden flex items-center justify-between mb-6">
+            <h1 class="text-xl font-bold gradient-text">Admin Panel</h1>
+            <button onclick="adminLogout()" class="text-red-400"><i class="fas fa-sign-out-alt text-xl"></i></button>
+        </div>
+
+        <div id="adminSection_dashboard" class="admin-section">
+            <h2 class="text-3xl font-bold mb-6">Tableau de bord</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
+                    <div class="text-2xl font-bold font-mono" id="dashStudents">0</div>
+                    <p class="text-xs text-gray-400">Élèves</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-money-bill text-2xl text-blue-400 mb-2"></i>
+                    <div class="text-2xl font-bold font-mono" id="dashPaid">0 FC</div>
+                    <p class="text-xs text-gray-400">Total payé</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-clock text-2xl text-yellow-400 mb-2"></i>
+                    <div class="text-2xl font-bold font-mono" id="dashRemaining">0 FC</div>
+                    <p class="text-xs text-gray-400">Reste à payer</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-chalkboard text-2xl text-indigo-400 mb-2"></i>
+                    <div class="text-2xl font-bold font-mono" id="dashClasses">0</div>
+                    <p class="text-xs text-gray-400">Classes</p>
+                </div>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold mb-4 text-sm uppercase tracking-wider text-gray-300">Statut des paiements</h3>
+                    <canvas id="chartStatus"></canvas>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold mb-4 text-sm uppercase tracking-wider text-gray-300">Paiements par classe</h3>
+                    <canvas id="chartClass"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminSection_students" class="admin-section hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 class="text-3xl font-bold">Gestion des élèves</h2>
+                <button onclick="showStudentModal()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter élève</button>
+            </div>
+            <div class="glass rounded-2xl p-4 mb-4">
+                <input id="searchStudentAdmin" oninput="renderStudentsTable()" type="text" placeholder="🔍 Rechercher un élève par nom ou ID..." class="input-modern w-full px-4 py-3 rounded-xl text-white">
+            </div>
+            <div class="glass rounded-2xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-bold border-b border-slate-800">
+                    <table class="table-modern w-full text-sm">
+                        <thead class="bg-white/5 text-gray-400 text-xs uppercase">
                             <tr>
-                                <th class="p-3">ID</th>
-                                <th class="p-3">Nom de l'Élève</th>
-                                <th class="p-3">Classe</th>
-                                <th class="p-3">Genre</th>
-                                <th class="p-3">Total Attendu</th>
-                                <th class="p-3">Total Perçu</th>
-                                <th class="p-3">Reste à payer</th>
-                                <th class="p-3 text-right">Actions de Fiche</th>
+                                <th class="px-4 py-3 text-left">ID</th>
+                                <th class="px-4 py-3 text-left">Nom</th>
+                                <th class="px-4 py-3 text-left">Classe</th>
+                                <th class="px-4 py-3 text-center">Sexe</th>
+                                <th class="px-4 py-3 text-right">Payé</th>
+                                <th class="px-4 py-3 text-right">Reste</th>
+                                <th class="px-4 py-3 text-center">Statut</th>
+                                <th class="px-4 py-3 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-rows-target" class="divide-y divide-slate-800/60"></tbody>
+                        <tbody id="studentsTableBody" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-    </main>
-
-    <div id="modal-crud" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl p-6 space-y-4 shadow-2xl">
-            <h3 id="modal-crud-title" class="text-sm font-bold text-white uppercase tracking-wider">Fiche d'Inscription Élève</h3>
-            <form onsubmit="submitCrudForm(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <input type="hidden" id="form-action-mode" value="add">
-                
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Code ID Unique*</label>
-                    <input type="text" id="f-id" placeholder="Ex: STU001" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white font-mono uppercase">
+        <div id="adminSection_payments" class="admin-section hidden">
+            <h2 class="text-3xl font-bold mb-6">Historique des versements</h2>
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="table-modern w-full text-sm">
+                        <thead class="bg-white/5 text-gray-400 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Date</th>
+                                <th class="px-4 py-3 text-left">Élève</th>
+                                <th class="px-4 py-3 text-left">Classe</th>
+                                <th class="px-4 py-3 text-right">Montant payé</th>
+                                <th class="px-4 py-3 text-right">Reste exigé</th>
+                                <th class="px-4 py-3 text-center">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody" class="divide-y divide-white/5"></tbody>
+                    </table>
                 </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Nom Complet de l'Élève*</label>
-                    <input type="text" id="f-name" placeholder="Nom et Prénom" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">URL de la Photo de l'Élève</label>
-                    <input type="url" id="f-photo" placeholder="https://lien-image.com/photo.jpg" class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Classe d'Affectation*</label>
-                    <select id="f-class" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white"></select>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Genre / Sexe*</label>
-                    <select id="f-sex" class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white">
-                        <option value="Masculin">Masculin</option>
-                        <option value="Féminin">Féminin</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Téléphone Tuteur Parent</label>
-                    <input type="text" id="f-phone" placeholder="Ex: 243XXXXXXXXX" class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Frais Fixés Totaux ($)*</label>
-                    <input type="number" id="f-total" placeholder="0" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white font-bold">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Montant Déjà Perçu ($)*</label>
-                    <input type="number" id="f-paid" placeholder="0" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white font-bold text-emerald-400">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Année Académique</label>
-                    <input type="text" id="f-year" value="2024-2025" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white font-mono">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Date d'Enregistrement</label>
-                    <input type="date" id="f-date" required class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white">
-                </div>
-
-                <div class="sm:col-span-2 flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                    <button type="button" onclick="closeCrudModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl font-semibold">Annuler</button>
-                    <button type="submit" id="btn-submit-form" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold">Enregistrer</button>
-                </div>
-            </form>
+            </div>
         </div>
+
+        <div id="adminSection_classes" class="admin-section hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Classes d'affectation</h2>
+                <button onclick="addClass()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter classe</button>
+            </div>
+            <div id="classesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <div id="adminSection_reports" class="admin-section hidden">
+            <h2 class="text-3xl font-bold mb-6">Exports & Rapports</h2>
+            <div class="grid sm:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf text-6xl text-red-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Exporter PDF</h3>
+                    <p class="text-gray-400 text-sm">Télécharger la matrice globale au format PDF</p>
+                </div>
+                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportExcel()">
+                    <i class="fas fa-file-excel text-6xl text-green-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Exporter Excel</h3>
+                    <p class="text-gray-400 text-sm">Télécharger les données structurées au format Excel</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
+    <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8 border border-white/10">
+        <h2 id="studentModalTitle" class="text-2xl font-bold mb-6 text-white uppercase tracking-wide">Inscrire un élève</h2>
+        <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">ID Unique*</label>
+                <input id="stuId" type="text" placeholder="Ex: STU001" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Nom Complet*</label>
+                <input id="stuName" type="text" placeholder="Nom complet de l'élève" required class="input-modern w-full px-4 py-3 rounded-xl text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">URL Photo de l'Élève</label>
+                <input id="stuPhoto" type="url" placeholder="https://images.unsplash.com/..." class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono" style="text-transform: none;">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Classe d'Affectation*</label>
+                <select id="stuClass" required class="input-modern w-full px-4 py-3 rounded-xl text-white bg-slate-900 border border-white/10"></select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Sexe / Genre*</label>
+                <select id="stuSex" required class="input-modern w-full px-4 py-3 rounded-xl text-white bg-slate-900 border border-white/10">
+                    <option value="">Sexe</option>
+                    <option value="Masculin">Masculin</option>
+                    <option value="Féminin">Féminin</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Téléphone Tuteur Parent</label>
+                <input id="stuPhone" type="tel" placeholder="Ex: 243XXXXXXXXX" class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Frais Totaux Fixés ($ ou FC)*</label>
+                <input id="stuTotal" type="number" placeholder="Montant total attendu" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Montant Déjà Perçu ($ ou FC)*</label>
+                <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-bold text-emerald-400 font-mono">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Année Académique</label>
+                <input id="stuYear" type="text" placeholder="ex: 2024-2025" value="2024-2025" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Date d'Inscription</label>
+                <input id="stuDate" type="date" class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
+            </div>
+            <div class="md:col-span-2 flex gap-3 mt-4">
+                <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold text-white transition">Enregistrer</button>
+                <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10 hover:bg-white/20 transition">Annuler</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <footer class="bg-slate-950 border-t border-slate-900 py-4 text-center text-[10px] text-slate-600 mt-auto">
-        OptiSchool Enterprise 2026 • Système d'interfaçage Google Sheets sécurisé pour établissements de la RDC.
-    </footer>
+<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div class="spinner"></div></div>
 
-    <script>
-        // LIEN UNIQUE WEB APP DEPLOIEMENT GOOGLE APPS SCRIPT
-        const API_URL = "https://script.google.com/macros/s/AKfycbyKMy7xYHdTYsfNmrr1EuD1IOoLPBZP5WG8XGGXWNfuYynvdXde_VS-9xmFWLTZ2B_X/exec";
+<script>
+// =============== CONFIGURATION ET ALLOCATION DE DONNÉES ===============
+// COPIE TON URL APPS SCRIPT WEB APP ICI POUR ASSURER LA SYNCHRO DIRECTE AVEC TON FICHIER GOOGLE SHEET
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKMy7xYHdTYsfNmrr1EuD1IOoLPBZP5WG8XGGXWNfuYynvdXde_VS-9xmFWLTZ2B_X/exec";
 
-        let memoryState = {
-            students: [],
-            classes: [],
-            currentActiveSearchTab: 'student',
-            isAdminConnected: false
-        };
+let students = [];
+let classes = [];
+let editingStudentId = null;
+let chartStatusInstance = null;
+let chartClassInstance = null;
 
-        // INITIALISATION AU CHARGEMENT DE LA PAGE
-        window.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-            loadDatabaseFromGoogleSheets();
-        });
+const DEMO_STUDENTS = [
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200', class: '4HSC A', sex: 'Masculin', phone: '243812345678', total: 500, paid: 500, year: '2024-2025', date: '2024-10-15' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: '', class: '1ère Primaire A', sex: 'Féminin', phone: '243823456789', total: 300, paid: 200, year: '2024-2025', date: '2024-10-10' },
+    { id: 'STU003', name: 'Tshibanda Paul', photo: '', class: '4HSC A', sex: 'Masculin', phone: '243834567890', total: 500, paid: 450, year: '2024-2025', date: '2024-11-02' },
+    { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'Féminin', phone: '243845678901', total: 600, paid: 600, year: '2024-2025', date: '2024-10-20' },
+    { id: 'STU005', name: 'Ilunga David', photo: '', class: '2ème Primaire B', sex: 'Masculin', phone: '243856789012', total: 350, paid: 150, year: '2024-2025', date: '2024-10-05' }
+];
 
-        // CHARGEMENT SYNCHRONISÉ DU FICHIER CENTRAL
-        async function loadDatabaseFromGoogleSheets() {
-            try {
-                const response = await fetch(API_URL);
-                const result = await response.json();
-                if (result.success) {
-                    memoryState.students = result.students || [];
-                    memoryState.classes = result.classes || [];
-                    buildSelectorsAndFilters();
-                    renderAdminTableRows(memoryState.students);
-                } else {
-                    displayToast("Erreur Cloud: " + result.error, "error");
-                }
-            } catch (err) {
-                displayToast("Erreur d'interconnexion au réseau Google.", "error");
-            }
-        }
+const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A'];
 
-        // RECONSTRUCTION DES EXTRAPOLATIONS SELECT DE CLASSE
-        function buildSelectorsAndFilters() {
-            const adminSelect = document.getElementById("admin-class-box");
-            const formSelect = document.getElementById("f-class");
+window.addEventListener('DOMContentLoaded', () => {
+    loadData();
+});
 
-            adminSelect.innerHTML = '<option value="ALL">Toutes les classes</option>';
-            formSelect.innerHTML = '<option value="" disabled selected>-- Choisir la Classe --</option>';
+function saveLocal() {
+    localStorage.setItem('spm_students', JSON.stringify(students));
+    localStorage.setItem('spm_classes', JSON.stringify(classes));
+}
 
-            memoryState.classes.forEach(c => {
-                if (c.name) {
-                    adminSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-                    formSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-                }
-            });
-        }
-
-        // ROUTEUR DE NAVIGATION ENTRE LES ONGLETS PUBLICS
-        function switchSearchTab(tabName) {
-            memoryState.currentActiveSearchTab = tabName;
-            const tStudent = document.getElementById("tab-student");
-            const tClass = document.getElementById("tab-class");
-            const pStudent = document.getElementById("panel-student");
-            const pClass = document.getElementById("panel-class");
-            const dResults = document.getElementById("display-results");
-
-            dResults.classList.add("hidden");
-            dResults.innerHTML = "";
-
-            if (tabName === 'student') {
-                tStudent.className = "flex-1 text-center pb-3 border-b-2 border-blue-500 text-white transition";
-                tClass.className = "flex-1 text-center pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-                pStudent.classList.remove("hidden");
-                pClass.classList.add("hidden");
+async function loadData() {
+    showLoading();
+    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const cloudData = await res.json();
+            if (cloudData.success) {
+                students = cloudData.students || [];
+                classes = cloudData.classes || DEMO_CLASSES;
+                saveLocal();
             } else {
-                tClass.className = "flex-1 text-center pb-3 border-b-2 border-emerald-500 text-white transition";
-                tStudent.className = "flex-1 text-center pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-                pClass.classList.remove("hidden");
-                pStudent.classList.add("hidden");
+                fallbackToLocal();
             }
+        } catch (e) {
+            console.warn("Échec cloud, bascule locale.");
+            fallbackToLocal();
         }
+    } else {
+        fallbackToLocal();
+    }
+    hideLoading();
+    updateStats();
+    populateClassSelect();
+    renderStudentsTable();
+    renderPaymentsTable();
+    renderClassesGrid();
+}
 
-        // PORTAIL PUBLIC : RECHERCHE PAR ID (AFFICHE INDIVIDU ET SES INFORMATIONS + IMAGE)
-        function triggerStudentSearch(targetId = null) {
-            const inputVal = document.getElementById("input-search-id").value.trim().toUpperCase();
-            const idToSearch = targetId || inputVal;
-            const displayZone = document.getElementById("display-results");
-            
-            displayZone.classList.remove("hidden");
+function fallbackToLocal() {
+    const saved = localStorage.getItem('spm_students');
+    const savedClasses = localStorage.getItem('spm_classes');
+    students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
+    classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
+    saveLocal();
+}
 
-            if (!idToSearch) {
-                displayZone.innerHTML = `<p class="text-xs text-amber-400 text-center font-bold">Veuillez insérer un code ID valide.</p>`;
-                return;
-            }
+function updateStats() {
+    const total = students.length;
+    const totalPaid = students.reduce((s, st) => s + (parseFloat(st.paid) || 0), 0);
+    const late = students.filter(s => (parseFloat(s.paid) || 0) < (parseFloat(s.total) || 0)).length;
+    
+    animateNumber('statStudents', total);
+    animateNumber('statPaid', totalPaid);
+    animateNumber('statLate', late);
+    animateNumber('statClasses', classes.length);
+    
+    if (document.getElementById('dashStudents')) {
+        document.getElementById('dashStudents').textContent = total;
+        document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
+        document.getElementById('dashRemaining').textContent = students.reduce((s,st) => s + ((parseFloat(st.total)||0)-(parseFloat(st.paid)||0)), 0).toLocaleString() + ' FC';
+        document.getElementById('dashClasses').textContent = classes.length;
+    }
+}
 
-            const student = memoryState.students.find(s => String(s.id).toUpperCase() === idToSearch);
+function animateNumber(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 40));
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = current.toLocaleString();
+    }, 25);
+}
 
-            if (!student) {
-                displayZone.innerHTML = `<p class="text-xs text-rose-400 text-center font-bold">❌ Aucun élève enregistré sous le code "${idToSearch}".</p>`;
-                return;
-            }
+function populateClassSelect() {
+    const sel = document.getElementById('classSelect');
+    const stuClassSel = document.getElementById('stuClass');
+    if (sel) {
+        sel.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    if (stuClassSel) {
+        stuClassSel.innerHTML = '<option value="">Choisir une classe</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+}
 
-            // Calculs financiers
-            const total = parseFloat(student.total) || 0;
-            const paid = parseFloat(student.paid) || 0;
-            const reste = total - paid;
-            const isClean = paid >= total;
-            
-            // Formatage de la photo
-            const validPhoto = (student.photo && student.photo.startsWith('http')) ? student.photo : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(student.name)}`;
+// =============== COMPOSANT DE FILTRAGE ET RECHERCHE PUBLIQUE ===============
+function showSearchById() { hideSections(); document.getElementById('searchByIdSection').classList.remove('hidden'); document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'}); }
+function showSearchByClass() { hideSections(); document.getElementById('searchByClassSection').classList.remove('hidden'); document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); }
+function hideSections() {
+    document.getElementById('searchByIdSection').classList.add('hidden');
+    document.getElementById('searchByClassSection').classList.add('hidden');
+}
 
-            displayZone.innerHTML = `
-                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center gap-5">
-                    <img src="${validPhoto}" class="w-24 h-24 rounded-xl object-cover bg-slate-900 border border-slate-700" alt="Avatar">
-                    <div class="flex-1 w-full space-y-2 text-center sm:text-left">
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
-                            <h4 class="text-base font-extrabold text-white">${student.name}</h4>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isClean ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
-                                ${isClean ? 'SOLVABLE / EN RÈGLE' : 'INSOLVABLE / RESTE À PAYER'}
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-slate-400 font-mono">
-                            <p><strong>Code ID :</strong> <span class="text-blue-400">${student.id}</span></p>
-                            <p><strong>Classe :</strong> ${student.class}</p>
-                            <p><strong>Genre :</strong> ${student.sex}</p>
-                            <p><strong>Téléphone :</strong> ${student.phone || 'Non spécifié'}</p>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs font-mono">
-                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800"><span class="block text-[9px] text-slate-500">Fixé</span><span class="font-bold text-slate-200">${total} $</span></div>
-                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800"><span class="block text-[9px] text-slate-500">Perçu</span><span class="font-bold text-emerald-400">${paid} $</span></div>
-                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800"><span class="block text-[9px] text-slate-500">Reste</span><span class="font-bold text-rose-400">${reste} $</span></div>
-                        </div>
-                    </div>
-                </div>`;
+// 1. RECHERCHE PAR ID AVEC ACCÈS DIRECTIONNEL LIÉ
+function searchById() {
+    const id = document.getElementById('searchIdInput').value.trim().toUpperCase();
+    const result = document.getElementById('searchResultById');
+    if (!id) return;
+    
+    const student = students.find(s => s.id.toString().toUpperCase() === id);
+    if (!student) {
+        result.innerHTML = `
+        <div class="glass rounded-2xl p-8 text-center border border-white/10 animate-fade-in">
+            <i class="fas fa-exclamation-circle text-5xl text-red-400 mb-4"></i>
+            <p class="text-xl font-bold">Aucun élève trouvé avec l'ID "${id}"</p>
+        </div>`;
+        return;
+    }
+    result.innerHTML = renderStudentCard(student);
+}
+
+function renderStudentCard(s) {
+    const total = parseFloat(s.total) || 0;
+    const paid = parseFloat(s.paid) || 0;
+    const remaining = total - paid;
+    let status = 'unpaid', statusText = 'Non payé', icon = 'times-circle';
+    
+    if (paid >= total) { status = 'paid'; statusText = 'Solvable'; icon = 'check-circle'; }
+    else if (paid > 0) { status = 'partial'; statusText = 'Incomplet'; icon = 'exclamation-circle'; }
+    
+    const photo = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff&size=200`;
+    
+    return `
+    <div class="glass rounded-3xl p-6 md:p-8 max-w-2xl mx-auto flex flex-col md:flex-row gap-6 items-center border border-white/10 shadow-2xl animate-fade-in">
+        <div class="w-32 h-32 rounded-2xl overflow-hidden border-4 border-white/10 shadow-md relative bg-slate-900">
+            <img src="${photo}" alt="${s.name}" class="w-full h-full object-cover">
+        </div>
+        <div class="flex-1 w-full text-center md:text-left space-y-3">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                <h3 class="text-2xl font-black tracking-tight text-white">${s.name}</h3>
+                <span class="badge-${status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                    <i class="fas fa-${icon}"></i> ${statusText}
+                </span>
+            </div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-300 font-mono text-left">
+                <div><span class="text-gray-500 font-sans">ID Unique:</span> <span class="text-emerald-400 font-bold">${s.id}</span></div>
+                <div><span class="text-gray-500 font-sans">Classe:</span> ${s.class}</div>
+                <div><span class="text-gray-500 font-sans">Sexe:</span> ${s.sex}</div>
+                <div><span class="text-gray-500 font-sans">Tuteur:</span> ${s.phone || 'N/A'}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs font-mono">
+                <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl"><span class="block text-[10px] text-gray-400 uppercase font-sans">Fixé</span><span class="text-sm font-extrabold text-white">${total} FC</span></div>
+                <div class="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl"><span class="block text-[10px] text-emerald-400 uppercase font-sans">Perçu</span><span class="text-sm font-extrabold text-emerald-400">${paid} FC</span></div>
+                <div class="bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl"><span class="block text-[10px] text-red-400 uppercase font-sans">Reste</span><span class="text-sm font-extrabold text-red-400">${remaining} FC</span></div>
+            </div>
+            <div class="pt-2 flex justify-end">
+                <button onclick="viewInFolder('${s.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <i class="fas fa-folder-open"></i> 👉 Ouvrir Dossier Admin
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+// 2. RECHERCHE ET FILTRAGE CRITIQUE PAR CLASSE + MONTANT MINIMUM EXIGÉ
+function searchByClass() {
+    const classVal = document.getElementById('classSelect').value;
+    const amountFilter = parseFloat(document.getElementById('amountFilter').value) || 0;
+    const resultDiv = document.getElementById('searchResultByClass');
+    
+    if (!classVal) {
+        resultDiv.innerHTML = '';
+        return;
+    }
+    
+    // Règle stricte demandée : même classe ET versement perçu >= montant ciblé
+    const filtered = students.filter(s => 
+        s.class === classVal && 
+        (parseFloat(s.paid) || 0) >= amountFilter
+    );
+    
+    if (filtered.length === 0) {
+        resultDiv.innerHTML = `
+        <div class="glass rounded-2xl p-8 text-center border border-white/10 animate-fade-in">
+            <i class="fas fa-search-minus text-4xl text-amber-400 mb-3"></i>
+            <p class="text-gray-300">Aucun élève de la classe <span class="text-white font-bold">"${classVal}"</span> n'a atteint le versement minimum de <span class="text-emerald-400 font-bold">${amountFilter} FC</span>.</p>
+        </div>`;
+        return;
+    }
+    
+    let tableRows = filtered.map(s => {
+        const remaining = (parseFloat(s.total) || 0) - (parseFloat(s.paid) || 0);
+        let badgeClass = 'badge-unpaid';
+        if (s.paid >= s.total) badgeClass = 'badge-paid';
+        else if (s.paid > 0) badgeClass = 'badge-partial';
+        
+        return `
+        <tr class="border-b border-white/5 hover:bg-white/5 transition text-sm">
+            <td class="px-4 py-3 font-mono text-emerald-400 font-bold">${s.id}</td>
+            <td class="px-4 py-3 font-semibold text-white">${s.name}</td>
+            <td class="px-4 py-3 text-gray-300">${s.sex}</td>
+            <td class="px-4 py-3 font-mono text-emerald-400 text-right font-bold">${s.paid} FC</td>
+            <td class="px-4 py-3 font-mono text-red-400 text-right font-bold">${remaining} FC</td>
+            <td class="px-4 py-3 text-center"><span class="${badgeClass} px-2.5 py-1 rounded-full text-[11px] font-bold">${s.paid >= s.total ? 'Payé' : 'Incomplet'}</span></td>
+            <td class="px-4 py-3 text-center">
+                <button onclick="viewStudentDetailsDirectly('${s.id}')" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 mx-auto">
+                    <i class="fas fa-user"></i> Voir Fiche
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+    
+    resultDiv.innerHTML = `
+    <div class="glass rounded-2xl overflow-hidden border border-white/10 shadow-xl mt-6 animate-fade-in">
+        <div class="p-4 bg-white/5 border-b border-white/10 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Registre : ${filtered.length} Éléve(s) Trouvé(s)</span>
+            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-500/30 font-mono font-bold">Paiement égal ou supérieur à : ${amountFilter} FC</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-black/20 text-gray-400 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3">ID Unique</th>
+                        <th class="px-4 py-3">Nom de l'Élève</th>
+                        <th class="px-4 py-3">Sexe</th>
+                        <th class="px-4 py-3 text-right">Versement Perçu</th>
+                        <th class="px-4 py-3 text-right">Reste Exigé</th>
+                        <th class="px-4 py-3 text-center">Statut</th>
+                        <th class="px-4 py-3 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">${tableRows}</tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+function viewStudentDetailsDirectly(id) {
+    showSearchById();
+    document.getElementById('searchIdInput').value = id;
+    searchById();
+}
+
+function viewInFolder(id) {
+    showLoginModal();
+    document.getElementById('loginEmail').value = "admin@school.cd";
+    document.getElementById('loginPassword').value = "admin123";
+    displayToast("Cliquez sur connecter pour ouvrir le dossier central.");
+}
+
+// =============== FONCTIONNALITÉS LOGICIEL ADMINISTRATION ===============
+function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginError').classList.add('hidden'); }
+
+function adminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+    
+    if (email === "admin@school.cd" && pass === "admin123") {
+        hideLoginModal();
+        document.getElementById('homePage').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        showAdminSection('dashboard');
+        displayToast("Session connectée - Direction RDC");
+    } else {
+        const err = document.getElementById('loginError');
+        err.textContent = "Combinaison erronée. Accès refusé.";
+        err.classList.remove('hidden');
+    }
+}
+
+function adminLogout() {
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('homePage').classList.remove('hidden');
+    displayToast("Déconnexion sécurisée.");
+}
+
+function showAdminSection(sec) {
+    document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`adminSection_${sec}`).classList.remove('hidden');
+    
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    event?.currentTarget?.classList?.add('active');
+    
+    if (sec === 'dashboard') renderCharts();
+    if (sec === 'students') renderStudentsTable();
+    if (sec === 'payments') renderPaymentsTable();
+    if (sec === 'classes') renderClassesGrid();
+}
+
+// =============== GESTIONNAIRE CRUD (ÉCRITURE / MODIFICATION) ===============
+function showStudentModal() {
+    editingStudentId = null;
+    document.getElementById('studentModalTitle').textContent = "Inscrire un nouvel élève";
+    document.getElementById('stuId').disabled = false;
+    document.getElementById('stuId').value = "";
+    document.getElementById('stuName').value = "";
+    document.getElementById('stuPhoto').value = "";
+    document.getElementById('stuClass').value = "";
+    document.getElementById('stuSex').value = "";
+    document.getElementById('stuPhone').value = "";
+    document.getElementById('stuTotal').value = "";
+    document.getElementById('stuPaid').value = "0";
+    document.getElementById('stuYear').value = "2024-2025";
+    document.getElementById('stuDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+
+function editStudent(id) {
+    const s = students.find(x => x.id === id);
+    if (!s) return;
+    editingStudentId = id;
+    document.getElementById('studentModalTitle').textContent = "Modifier la fiche de versement";
+    document.getElementById('stuId').disabled = true;
+    document.getElementById('stuId').value = s.id;
+    document.getElementById('stuName').value = s.name;
+    document.getElementById('stuPhoto').value = s.photo || "";
+    document.getElementById('stuClass').value = s.class || "";
+    document.getElementById('stuSex').value = s.sex || "";
+    document.getElementById('stuPhone').value = s.phone || "";
+    document.getElementById('stuTotal').value = s.total || "";
+    document.getElementById('stuPaid').value = s.paid || "0";
+    document.getElementById('stuYear').value = s.year || "2024-2025";
+    document.getElementById('stuDate').value = s.date ? s.date.split('T')[0] : "";
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+
+async function saveStudent(e) {
+    e.preventDefault();
+    showLoading();
+    
+    const payload = {
+        id: document.getElementById('stuId').value.trim().toUpperCase(),
+        name: document.getElementById('stuName').value.trim(),
+        photo: document.getElementById('stuPhoto').value.trim(),
+        class: document.getElementById('stuClass').value,
+        sex: document.getElementById('stuSex').value,
+        phone: document.getElementById('stuPhone').value.trim(),
+        total: parseFloat(document.getElementById('stuTotal').value) || 0,
+        paid: parseFloat(document.getElementById('stuPaid').value) || 0,
+        year: document.getElementById('stuYear').value.trim(),
+        date: document.getElementById('stuDate').value || new Date().toISOString().split('T')[0]
+    };
+
+    if (editingStudentId) {
+        const idx = students.findIndex(x => x.id === editingStudentId);
+        if (idx !== -1) students[idx] = payload;
+    } else {
+        if (students.some(x => x.id.toUpperCase() === payload.id)) {
+            hideLoading();
+            alert("Erreur : Cet ID unique d'élève existe déjà.");
+            return;
         }
+        students.push(payload);
+    }
 
-        // PORTAIL PUBLIC : RECHERCHE PAR CLASSE (AFFICHE UNIQUEMENT LES PERSONNES AYANT PAYE LE MONTANT DEMANDÉ)
-        function triggerClassSearch() {
-            const targetClass = document.getElementById("input-search-class").value.trim().toUpperCase();
-            const minAmount = parseFloat(document.getElementById("input-search-amount").value);
-            const displayZone = document.getElementById("display-results");
-
-            displayZone.classList.remove("hidden");
-
-            if (!targetClass || isNaN(minAmount)) {
-                displayZone.innerHTML = `<p class="text-xs text-amber-400 text-center font-bold">Veuillez remplir le nom de la classe et le montant de ciblage.</p>`;
-                return;
-            }
-
-            // Filtrage strict : même classe ET montant perçu >= montant demandé
-            const matchStudents = memoryState.students.filter(s => 
-                String(s.class).toUpperCase().replace(/\s|\//g, "") === targetClass.replace(/\s|\//g, "") &&
-                (parseFloat(s.paid) || 0) >= minAmount
-            );
-
-            if (matchStudents.length === 0) {
-                displayZone.innerHTML = `
-                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl text-center">
-                        <p class="text-xs text-slate-400">Aucun élève de la classe <span class="text-white font-bold">"${targetClass}"</span> n'a atteint le versement minimal de <span class="text-emerald-400 font-bold">${minAmount} $</span>.</p>
-                    </div>`;
-                return;
-            }
-
-            let htmlRows = matchStudents.map((s, idx) => `
-                <tr class="border-b border-slate-800/60 hover:bg-slate-900/30 text-xs font-mono">
-                    <td class="p-2.5 text-slate-500">${idx + 1}</td>
-                    <td class="p-2.5 text-blue-400 font-bold">${s.id}</td>
-                    <td class="p-2.5 text-slate-200 font-sans font-bold">${s.name}</td>
-                    <td class="p-2.5 text-center text-slate-400">${s.sex}</td>
-                    <td class="p-2.5 text-right text-emerald-400 font-bold">${s.paid} $</td>
-                    <td class="p-2.5 text-right">
-                        <button onclick="switchSearchTab('student'); triggerStudentSearch('${s.id}');" class="bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded text-[10px] font-sans font-bold transition">👉 Voir Fiche</button>
-                    </td>
-                </tr>
-            `).join('');
-
-            displayZone.innerHTML = `
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Élèves de ${targetClass} ayant versé au moins ${minAmount} $</h4>
-                        <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2 py-0.5 rounded-md border border-emerald-500/20 font-bold">${matchStudents.length} Trouvé(s)</span>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-900 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-800">
-                                <tr>
-                                    <th class="p-2.5 w-12">N°</th>
-                                    <th class="p-2.5">ID</th>
-                                    <th class="p-2.5">Nom Complet</th>
-                                    <th class="p-2.5 text-center">Sexe</th>
-                                    <th class="p-2.5 text-right">Montant Perçu</th>
-                                    <th class="p-2.5 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>${htmlRows}</tbody>
-                        </table>
-                    </div>
-                </div>`;
-        }
-
-        // LOGIQUE DE SÉCURITÉ ET DIRECTION COMPTABLE
-        function handleLogin(e) {
-            e.preventDefault();
-            const em = document.getElementById("admin-email").value.trim();
-            const pa = document.getElementById("admin-password").value.trim();
-
-            if (em === "admin@school.cd" && pa === "admin123") {
-                memoryState.isAdminConnected = true;
-                displayToast("Accès directionnel accordé.", "success");
-                toggleView("admin");
-            } else {
-                displayToast("Accès refusé. Informations erronées.", "error");
-            }
-        }
-
-        function handleLogout() {
-            memoryState.isAdminConnected = false;
-            displayToast("Déconnexion réussie.", "warning");
-            toggleView("public");
-        }
-
-        // RENDU GENERIQUE DU PANNEAU DIRECTIONNEL (ADMIN TABLE)
-        function renderAdminTableRows(list) {
-            const container = document.getElementById("admin-rows-target");
-            container.innerHTML = "";
-
-            if (list.length === 0) {
-                container.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 font-medium">Aucun enregistrement ne correspond.</td></tr>`;
-                return;
-            }
-
-            list.forEach(s => {
-                const total = parseFloat(s.total) || 0;
-                const paid = parseFloat(s.paid) || 0;
-                const reste = total - paid;
-
-                container.innerHTML += `
-                    <tr class="hover:bg-slate-900/40 border-b border-slate-800/40">
-                        <td class="p-3 font-mono font-bold text-blue-400">${s.id}</td>
-                        <td class="p-3 font-bold text-white">${s.name}</td>
-                        <td class="p-3 text-slate-400 font-semibold">${s.class}</td>
-                        <td class="p-3 text-slate-400">${s.sex}</td>
-                        <td class="p-3 font-mono font-bold">${total} $</td>
-                        <td class="p-3 font-mono font-bold text-emerald-400">${paid} $</td>
-                        <td class="p-3 font-mono font-bold ${reste <= 0 ? 'text-emerald-400' : 'text-rose-400'}">${reste} $</td>
-                        <td class="p-3 text-right space-x-2 font-semibold">
-                            <button onclick="toggleView('public'); switchSearchTab('student'); triggerStudentSearch('${s.id}');" class="text-emerald-400 hover:underline">Fiche Public</button>
-                            <button onclick="openCrudModal('edit', '${s.id}')" class="text-blue-400 hover:underline">Modifier</button>
-                            <button onclick="deleteStudentData('${s.id}')" class="text-rose-500 hover:underline">Suppr</button>
-                        </td>
-                    </tr>`;
+    saveLocal();
+    
+    // Envoi synchrone vers Google Sheet
+    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "save", data: payload })
             });
-        }
+        } catch(err) { console.error("Erreur Cloud Sync", err); }
+    }
 
-        // SYSTEME DE FILTRAGE ADMIN INTERNE
-        function filterAdminTable() {
-            const searchWord = document.getElementById("admin-search-box").value.trim().toLowerCase();
-            const classTarget = document.getElementById("admin-class-box").value;
+    hideStudentModal();
+    await loadData();
+    displayToast("Matrice élève mise à jour !");
+}
 
-            const filteredList = memoryState.students.filter(s => {
-                const matchesSearch = s.name.toLowerCase().includes(searchWord) || s.id.toLowerCase().includes(searchWord);
-                const matchesClass = (classTarget === "ALL") || (s.class === classTarget);
-                return matchesSearch && matchesClass;
+async function deleteStudent(id) {
+    if (!confirm(`Supprimer définitivement l'élève ${id} du serveur central RDC ?`)) return;
+    showLoading();
+    
+    students = students.filter(s => s.id !== id);
+    saveLocal();
+
+    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "delete", data: { id: id } })
             });
+        } catch(err) { console.error(err); }
+    }
+    
+    await loadData();
+    hideLoading();
+    displayToast("Enregistrement retiré.", "error");
+}
 
-            renderAdminTableRows(filteredList);
+function addClass() {
+    const name = prompt("Entrez le nom de la nouvelle classe (Ex: 5e Humanité Littéraire) :");
+    if (name && !classes.includes(name)) {
+        classes.push(name);
+        saveLocal();
+        populateClassSelect();
+        renderClassesGrid();
+        displayToast("Classe ajoutée !");
+    }
+}
+
+function hideStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+// =============== ALGORITHMES DE RENDU DE TABLEAUX ===============
+function renderStudentsTable() {
+    const searchWord = document.getElementById('searchStudentAdmin').value.trim().toLowerCase();
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    
+    const filtered = students.filter(s => 
+        s.name.toLowerCase().includes(searchWord) || 
+        s.id.toLowerCase().includes(searchWord) ||
+        s.class.toLowerCase().includes(searchWord)
+    );
+    
+    tbody.innerHTML = filtered.map(s => {
+        const total = parseFloat(s.total) || 0;
+        const paid = parseFloat(s.paid) || 0;
+        const remaining = total - paid;
+        let badge = 'badge-unpaid', txt = 'Non payé';
+        
+        if (paid >= total) { badge = 'badge-paid'; txt = 'Payé'; }
+        else if (paid > 0) { badge = 'badge-partial'; txt = 'Incomplet'; }
+        
+        return `
+        <tr class="border-b border-white/5 hover:bg-white/5 transition text-slate-200">
+            <td class="px-4 py-3 font-mono font-bold text-emerald-400">${s.id}</td>
+            <td class="px-4 py-3 font-semibold text-white">${s.name}</td>
+            <td class="px-4 py-3 text-gray-300">${s.class}</td>
+            <td class="px-4 py-3 text-center text-gray-400">${s.sex}</td>
+            <td class="px-4 py-3 font-mono text-right text-emerald-400 font-bold">${paid} FC</td>
+            <td class="px-4 py-3 font-mono text-right text-red-400 font-bold">${remaining} FC</td>
+            <td class="px-4 py-3 text-center"><span class="${badge} px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider">${txt}</span></td>
+            <td class="px-4 py-3 text-center space-x-3">
+                <button onclick="editStudent('${s.id}')" class="text-blue-400 hover:text-blue-300 transition"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:text-red-300 transition"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderPaymentsTable() {
+    const tbody = document.getElementById('paymentsTableBody');
+    if (!tbody) return;
+    
+    const activePayments = students.filter(s => (parseFloat(s.paid) || 0) > 0);
+    tbody.innerHTML = activePayments.map(s => {
+        const remaining = (parseFloat(s.total) || 0) - (parseFloat(s.paid) || 0);
+        return `
+        <tr class="border-b border-white/5 text-slate-300 font-mono">
+            <td class="px-4 py-3 text-gray-500">${s.date || 'N/A'}</td>
+            <td class="px-4 py-3 font-sans font-semibold text-white">${s.name}</td>
+            <td class="px-4 py-3 font-sans text-gray-400">${s.class}</td>
+            <td class="px-4 py-3 text-right text-emerald-400 font-bold">+ ${s.paid} FC</td>
+            <td class="px-4 py-3 text-right text-gray-400">${remaining} FC</td>
+            <td class="px-4 py-3 text-center font-sans"><span class="badge-paid px-2 py-0.5 rounded text-[10px] uppercase font-bold">Validé</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderClassesGrid() {
+    const container = document.getElementById('classesList');
+    if (!container) return;
+    
+    container.innerHTML = classes.map(c => {
+        const count = students.filter(s => s.class === c).length;
+        const totalClassPaid = students.filter(s => s.class === c).reduce((sum, s) => sum + (parseFloat(s.paid) || 0), 0);
+        return `
+        <div class="glass rounded-2xl p-5 border border-white/10 shadow-md card-hover">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-base font-bold text-white tracking-wide">${c}</h4>
+                <span class="bg-blue-500/20 text-blue-400 text-xs px-2.5 py-1 rounded-lg font-mono font-bold border border-blue-500/20">${count} Élèves</span>
+            </div>
+            <p class="text-[11px] text-gray-500 uppercase tracking-widest font-semibold">Total perçu :</p>
+            <p class="text-xl font-black text-emerald-400 font-mono">${totalClassPaid.toLocaleString()} FC</p>
+        </div>`;
+    }).join('');
+}
+
+// =============== COMPOSANT STATISTIQUE DES GRAPHIQUES (CHART.JS) ===============
+function renderCharts() {
+    const ctxStatus = document.getElementById('chartStatus');
+    const ctxClass = document.getElementById('chartClass');
+    if (!ctxStatus || !ctxClass) return;
+
+    if (chartStatusInstance) chartStatusInstance.destroy();
+    if (chartClassInstance) chartClassInstance.destroy();
+
+    const paid = students.filter(s => parseFloat(s.paid) >= parseFloat(s.total)).length;
+    const partial = students.filter(s => parseFloat(s.paid) > 0 && parseFloat(s.paid) < parseFloat(s.total)).length;
+    const unpaid = students.filter(s => (parseFloat(s.paid) || 0) === 0).length;
+
+    chartStatusInstance = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Totalement Solvables', 'Paiements Partiels', 'Non Payés'],
+            datasets: [{
+                data: [paid, partial, unpaid],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } } }
         }
+    });
 
-        // CONTROLE DU COMPOSANT MODAL FORMULAIRE
-        function openCrudModal(mode, id = null) {
-            document.getElementById("modal-crud").classList.remove("hidden");
-            document.getElementById("form-action-mode").value = mode;
+    const classDataCollect = classes.map(c => students.filter(s => s.class === c).reduce((sum, s) => sum + (parseFloat(s.paid) || 0), 0));
 
-            if (mode === 'add') {
-                document.getElementById("modal-crud-title").innerText = "Inscrire un nouvel élève";
-                document.getElementById("f-id").disabled = false;
-                document.getElementById("f-id").value = "";
-                document.getElementById("f-name").value = "";
-                document.getElementById("f-photo").value = "";
-                document.getElementById("f-phone").value = "";
-                document.getElementById("f-total").value = "";
-                document.getElementById("f-paid").value = "";
-            } else {
-                document.getElementById("modal-crud-title").innerText = "Modifier les données d'inscription";
-                document.getElementById("f-id").disabled = true;
-
-                const s = memoryState.students.find(x => x.id === id);
-                if (s) {
-                    document.getElementById("f-id").value = s.id;
-                    document.getElementById("f-name").value = s.name;
-                    document.getElementById("f-photo").value = s.photo || "";
-                    document.getElementById("f-class").value = s.class;
-                    document.getElementById("f-sex").value = s.sex;
-                    document.getElementById("f-phone").value = s.phone;
-                    document.getElementById("f-total").value = s.total;
-                    document.getElementById("f-paid").value = s.paid;
-                    document.getElementById("f-year").value = s.year;
-                    if(s.date) document.getElementById("f-date").value = String(s.date).split('T')[0];
-                }
-            }
+    chartClassInstance = new Chart(ctxClass, {
+        type: 'bar',
+        data: {
+            labels: classes,
+            datasets: [{
+                label: 'Fonds Perçus (FC)',
+                data: classDataCollect,
+                backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            scales: {
+                x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.03)' } }
+            },
+            plugins: { legend: { labels: { color: '#fff' } } }
         }
+    });
+}
 
-        function closeCrudModal() {
-            document.getElementById("modal-crud").classList.add("hidden");
-        }
+// =============== EXPORTS EXTÉRIEURS (PDF / EXCEL) ===============
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFont("Helvetica", "bold");
+    doc.text("SCHOOL PAYMENT MANAGER - REPORT CENTRAL RDC", 14, 18);
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    
+    let lineY = 28;
+    doc.text("ID Unique", 14, lineY);
+    doc.text("Nom de l'Élève", 35, lineY);
+    doc.text("Classe", 95, lineY);
+    doc.text("Perçu (FC)", 145, lineY);
+    doc.text("Attendu (FC)", 175, lineY);
+    doc.line(14, lineY + 2, 195, lineY + 2);
+    lineY += 8;
 
-        // VALIDATION POST ET ENVOI SUR LE CLOUD GOOGLE
-        async function submitCrudForm(e) {
-            e.preventDefault();
-            const btn = document.getElementById("btn-submit-form");
-            const mode = document.getElementById("form-action-mode").value;
+    students.forEach(s => {
+        if (lineY > 275) { doc.addPage(); lineY = 20; }
+        doc.text(String(s.id), 14, lineY);
+        doc.text(String(s.name).substring(0, 28), 35, lineY);
+        doc.text(String(s.class).substring(0, 22), 95, lineY);
+        doc.text(String(s.paid), 145, lineY);
+        doc.text(String(s.total), 175, lineY);
+        lineY += 7;
+    });
+    doc.save("Registre_Financier_SchoolManager.pdf");
+}
 
-            const payload = {
-                id: document.getElementById("f-id").value.trim().toUpperCase(),
-                name: document.getElementById("f-name").value.trim(),
-                photo: document.getElementById("f-photo").value.trim(),
-                class: document.getElementById("f-class").value,
-                sex: document.getElementById("f-sex").value,
-                phone: document.getElementById("f-phone").value.trim(),
-                total: Number(document.getElementById("f-total").value),
-                paid: Number(document.getElementById("f-paid").value),
-                year: document.getElementById("f-year").value.trim(),
-                date: document.getElementById("f-date").value
-            };
+function exportExcel() {
+    const formatted = students.map(s => ({
+        "ID Unique": s.id,
+        "Nom de l'Élève": s.name,
+        "Classe": s.class,
+        "Genre": s.sex,
+        "Téléphone Parent": s.phone,
+        "Total Fixé": s.total,
+        "Montant Payé": s.paid,
+        "Reste à Percevoir": (parseFloat(s.total)||0)-(parseFloat(s.paid)||0),
+        "Année Académique": s.year,
+        "Date Versement": s.date
+    }));
+    const sheet = XLSX.utils.json_to_sheet(formatted);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, "Registre Central");
+    XLSX.writeFile(book, "Matrice_Financiere_OptiSchool.xlsx");
+}
 
-            btn.disabled = true;
-            btn.innerText = "Écriture Google Sheet...";
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: mode, data: payload })
-                });
-                const res = await response.json();
-
-                if (res.success) {
-                    displayToast(res.message, "success");
-                    closeCrudModal();
-                    await loadDatabaseFromGoogleSheets();
-                } else {
-                    displayToast("Échec: " + res.error, "error");
-                }
-            } catch (err) {
-                displayToast("Erreur de communication API.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Enregistrer";
-            }
-        }
-
-        // SUPPRESSION DE LIGNE SUR SPREADSHEET
-        async function deleteStudentData(id) {
-            if (!confirm(`Supprimer définitivement l'élève ${id} du serveur central ?`)) return;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "delete", data: { id: id } })
-                });
-                const res = await response.json();
-                if (res.success) {
-                    displayToast(res.message, "success");
-                    await loadDatabaseFromGoogleSheets();
-                } else {
-                    displayToast("Erreur: " + res.error, "error");
-                }
-            } catch (err) {
-                displayToast("Erreur réseau.", "error");
-            }
-        }
-
-        // NAVIGATEUR INTERNE DE VUES
-        function toggleView(viewName) {
-            document.getElementById("view-public").classList.add("hidden");
-            document.getElementById("view-login").classList.add("hidden");
-            document.getElementById("view-admin").classList.add("hidden");
-
-            const btnTop = document.getElementById("btn-top-action");
-
-            if (viewName === 'public') {
-                document.getElementById("view-public").classList.remove("hidden");
-                btnTop.innerText = "Espace Comptabilité";
-                btnTop.setAttribute("onclick", "toggleView('login')");
-            } else if (viewName === 'login') {
-                document.getElementById("view-login").classList.remove("hidden");
-                btnTop.innerText = "Accueil";
-                btnTop.setAttribute("onclick", "toggleView('public')");
-            } else if (viewName === 'admin') {
-                if (!memoryState.isAdminConnected) { toggleView('login'); return; }
-                document.getElementById("view-admin").classList.remove("hidden");
-                btnTop.innerText = "Déconnexion";
-                btnTop.setAttribute("onclick", "handleLogout()");
-            }
-        }
-
-        // POPUP NOTIFICATION INTERNE
-        function displayToast(msg, type = "success") {
-            const container = document.getElementById("toast-container");
-            const element = document.createElement("div");
-            
-            let color = "bg-slate-900 border-emerald-500 text-emerald-400";
-            if (type === 'error') color = "bg-slate-900 border-rose-500 text-rose-400";
-            if (type === 'warning') color = "bg-slate-900 border-amber-500 text-amber-400";
-
-            element.className = `p-3.5 rounded-xl border text-xs font-bold shadow-xl transition transform translate-y-0 ${color}`;
-            element.innerText = msg;
-
-            container.appendChild(element);
-            setTimeout(() => { element.remove(); }, 4500);
-        }
-    </script>
+// ALERTE FLOATING TOAST SYSTEM
+function displayToast(msg, type = "success") {
+    const toast = document.createElement("div");
+    toast.style.position = "fixed";
+    toast.style.bottom = "24px";
+    toast.style.right = "24px";
+    toast.style.zIndex = "9999";
+    toast.className = `glass p-4 rounded-2xl text-xs font-bold border ${type === 'error' ? 'border-red-500 text-red-400' : 'border-emerald-500 text-emerald-400'} shadow-2xl animate-fade-in`;
+    toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-ban' : 'fa-check-circle'} mr-2"></i>${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+</script>
 </body>
 </html>
