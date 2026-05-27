@@ -11,6 +11,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// ⚠️ REMPLACE CES VALEURS PAR TA CONFIG FIREBASE
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+window.db = db;
+window.auth = auth;
+window.firebaseFunctions = { collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc, signInWithEmailAndPassword, onAuthStateChanged, signOut };
+window.firebaseReady = true;
+document.dispatchEvent(new Event('firebaseReady'));
+</script>
+
 <style>
 * { font-family: 'Inter', sans-serif; }
 body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%); min-height: 100vh; overflow-x: hidden; }
@@ -35,7 +61,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 @keyframes spin { to { transform: rotate(360deg); } }
 .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; animation: blob 15s infinite; }
 @keyframes blob { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(100px,-50px) scale(1.1); } 66% { transform: translate(-50px,50px) scale(0.9); } }
-.input-modern { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; text-transform: uppercase; }
+.input-modern { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
 .input-modern:focus { background: rgba(255,255,255,0.1); border-color: #10b981; outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.2); }
 .sidebar-item { transition: all 0.3s; }
 .sidebar-item:hover, .sidebar-item.active { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(59,130,246,0.2)); border-left: 4px solid #10b981; }
@@ -138,40 +164,47 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
-        <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
-            <div class="flex items-center justify-between mb-6">
+        <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in relative overflow-hidden">
+            <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
-                    <i class="fas fa-id-card text-green-400"></i> Recherche par ID Directe
+                    <i class="fas fa-search-plus text-green-400 animate-pulse"></i> Suivi d'Élève en Temps Réel
                 </h2>
-                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input id="searchIdInput" type="text" placeholder="Entrer l'ID de l'élève (Ex: STU001)..." class="input-modern flex-1 px-6 py-4 rounded-xl text-white placeholder-gray-400 font-mono">
-                <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center">
-                    <i class="fas fa-search"></i> Rechercher
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <div id="searchResultById" class="mt-8"></div>
+            <p class="text-sm text-gray-400 mb-4">Saisissez l'identifiant unique de l'élève pour inspecter instantanément sa situation scolaire et financière.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fas fa-fingerprint absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input id="searchIdInput" type="text" placeholder="Ex: STD-2026-001, STU001..." class="input-modern w-full pl-12 pr-6 py-4 rounded-xl text-white placeholder-gray-500 font-mono tracking-wider text-lg" onkeyup="if(event.key === 'Enter') searchById()">
+                </div>
+                <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg shadow-green-500/20 whitespace-nowrap">
+                    <i class="fas fa-search"></i> Lancer l'analyse
+                </button>
+            </div>
+
+            <div id="searchCardLoader" class="hidden my-8 flex flex-col items-center justify-center gap-3 py-6">
+                <div class="spinner !w-10 !h-10"></div>
+                <p class="text-xs font-medium text-emerald-400 tracking-widest uppercase animate-pulse">Extraction de la base de données...</p>
+            </div>
+
+            <div id="searchResultById" class="mt-8 transition-all duration-300"></div>
         </div>
 
         <div id="searchByClassSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
-                    <i class="fas fa-users text-blue-400"></i> Filtrage par Classe & Solvabilité
+                    <i class="fas fa-users text-blue-400"></i> Recherche par Classe
                 </h2>
                 <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="grid md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">Sélectionner la classe</label>
-                    <select id="classSelect" onchange="searchByClass()" class="input-modern w-full px-6 py-4 rounded-xl text-white bg-slate-900 border border-white/10">
-                        <option value="">-- Sélectionner une classe --</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">Montant Perçu Minimum ($ ou FC)</label>
-                    <input id="amountFilter" type="number" placeholder="Ex: 450 (Affiche uniquement ceux qui ont payé >=)" oninput="searchByClass()" class="input-modern w-full px-6 py-4 rounded-xl text-white placeholder-gray-400">
-                </div>
+                <select id="classSelect" onchange="searchByClass()" class="input-modern px-6 py-4 rounded-xl text-white">
+                    <option value="">-- Sélectionner une classe --</option>
+                </select>
+                <input id="amountFilter" type="number" placeholder="Filtrer par montant payé..." oninput="filterByAmount()" class="input-modern px-6 py-4 rounded-xl text-white placeholder-gray-400">
             </div>
             <div id="searchResultByClass"></div>
         </div>
@@ -188,13 +221,13 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <p class="text-gray-400 text-sm">Connectez-vous pour continuer</p>
         </div>
         <form onsubmit="adminLogin(event)" class="space-y-4">
-            <input id="loginEmail" type="email" placeholder="Email administrateur" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400" style="text-transform: none;">
-            <input id="loginPassword" type="password" placeholder="Mot de passe" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400" style="text-transform: none;">
+            <input id="loginEmail" type="email" placeholder="Email administrateur" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
+            <input id="loginPassword" type="password" placeholder="Mot de passe" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
             <div id="loginError" class="hidden text-red-400 text-sm text-center"></div>
             <button type="submit" class="gradient-btn w-full py-3 rounded-xl font-bold">Se connecter</button>
             <button type="button" onclick="hideLoginModal()" class="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white">Annuler</button>
         </form>
-        <p class="text-xs text-gray-500 text-center mt-4">Dossier Direction: admin@school.cd / admin123</p>
+        <p class="text-xs text-gray-500 text-center mt-4">Demo: admin@school.cd / admin123</p>
     </div>
 </div>
 
@@ -232,32 +265,32 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
-                    <div class="text-2xl font-bold font-mono" id="dashStudents">0</div>
+                    <div class="text-2xl font-bold" id="dashStudents">0</div>
                     <p class="text-xs text-gray-400">Élèves</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-money-bill text-2xl text-blue-400 mb-2"></i>
-                    <div class="text-2xl font-bold font-mono" id="dashPaid">0 FC</div>
+                    <div class="text-2xl font-bold" id="dashPaid">0 FC</div>
                     <p class="text-xs text-gray-400">Total payé</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-clock text-2xl text-yellow-400 mb-2"></i>
-                    <div class="text-2xl font-bold font-mono" id="dashRemaining">0 FC</div>
+                    <div class="text-2xl font-bold" id="dashRemaining">0 FC</div>
                     <p class="text-xs text-gray-400">Reste à payer</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-chalkboard text-2xl text-indigo-400 mb-2"></i>
-                    <div class="text-2xl font-bold font-mono" id="dashClasses">0</div>
+                    <div class="text-2xl font-bold" id="dashClasses">0</div>
                     <p class="text-xs text-gray-400">Classes</p>
                 </div>
             </div>
             <div class="grid lg:grid-cols-2 gap-6">
                 <div class="glass rounded-2xl p-6">
-                    <h3 class="font-bold mb-4 text-sm uppercase tracking-wider text-gray-300">Statut des paiements</h3>
+                    <h3 class="font-bold mb-4">Statut des paiements</h3>
                     <canvas id="chartStatus"></canvas>
                 </div>
                 <div class="glass rounded-2xl p-6">
-                    <h3 class="font-bold mb-4 text-sm uppercase tracking-wider text-gray-300">Paiements par classe</h3>
+                    <h3 class="font-bold mb-4">Paiements par classe</h3>
                     <canvas id="chartClass"></canvas>
                 </div>
             </div>
@@ -269,45 +302,45 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
                 <button onclick="showStudentModal()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter élève</button>
             </div>
             <div class="glass rounded-2xl p-4 mb-4">
-                <input id="searchStudentAdmin" oninput="renderStudentsTable()" type="text" placeholder="🔍 Rechercher un élève par nom ou ID..." class="input-modern w-full px-4 py-3 rounded-xl text-white">
+                <input id="searchStudentAdmin" oninput="renderStudentsTable()" type="text" placeholder="🔍 Rechercher un élève..." class="input-modern w-full px-4 py-3 rounded-xl text-white">
             </div>
             <div class="glass rounded-2xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="table-modern w-full text-sm">
-                        <thead class="bg-white/5 text-gray-400 text-xs uppercase">
+                    <table class="table-modern w-full">
+                        <thead class="bg-white/5">
                             <tr>
-                                <th class="px-4 py-3 text-left">ID</th>
-                                <th class="px-4 py-3 text-left">Nom</th>
-                                <th class="px-4 py-3 text-left">Classe</th>
-                                <th class="px-4 py-3 text-center">Sexe</th>
-                                <th class="px-4 py-3 text-right">Payé</th>
-                                <th class="px-4 py-3 text-right">Reste</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Nom</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Sexe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Payé</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="studentsTableBody" class="divide-y divide-white/5"></tbody>
+                        <tbody id="studentsTableBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
         <div id="adminSection_payments" class="admin-section hidden">
-            <h2 class="text-3xl font-bold mb-6">Historique des versements</h2>
+            <h2 class="text-3xl font-bold mb-6">Historique des paiements</h2>
             <div class="glass rounded-2xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="table-modern w-full text-sm">
-                        <thead class="bg-white/5 text-gray-400 text-xs uppercase">
+                    <table class="table-modern w-full">
+                        <thead class="bg-white/5">
                             <tr>
-                                <th class="px-4 py-3 text-left">Date</th>
-                                <th class="px-4 py-3 text-left">Élève</th>
-                                <th class="px-4 py-3 text-left">Classe</th>
-                                <th class="px-4 py-3 text-right">Montant payé</th>
-                                <th class="px-4 py-3 text-right">Reste exigé</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Élève</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Montant payé</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
                             </tr>
                         </thead>
-                        <tbody id="paymentsTableBody" class="divide-y divide-white/5"></tbody>
+                        <tbody id="paymentsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -315,7 +348,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 
         <div id="adminSection_classes" class="admin-section hidden">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold">Classes d'affectation</h2>
+                <h2 class="text-3xl font-bold">Classes</h2>
                 <button onclick="addClass()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter classe</button>
             </div>
             <div id="classesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -327,12 +360,12 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
                 <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportPDF()">
                     <i class="fas fa-file-pdf text-6xl text-red-400 mb-4"></i>
                     <h3 class="text-xl font-bold mb-2">Exporter PDF</h3>
-                    <p class="text-gray-400 text-sm">Télécharger la matrice globale au format PDF</p>
+                    <p class="text-gray-400 text-sm">Télécharger la liste des élèves au format PDF</p>
                 </div>
                 <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportExcel()">
                     <i class="fas fa-file-excel text-6xl text-green-400 mb-4"></i>
                     <h3 class="text-xl font-bold mb-2">Exporter Excel</h3>
-                    <p class="text-gray-400 text-sm">Télécharger les données structurées au format Excel</p>
+                    <p class="text-gray-400 text-sm">Télécharger les données au format Excel</p>
                 </div>
             </div>
         </div>
@@ -340,87 +373,68 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 </div>
 
 <div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
-    <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8 border border-white/10">
-        <h2 id="studentModalTitle" class="text-2xl font-bold mb-6 text-white uppercase tracking-wide">Inscrire un élève</h2>
-        <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4 text-sm">
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">ID Unique*</label>
-                <input id="stuId" type="text" placeholder="Ex: STU001" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Nom Complet*</label>
-                <input id="stuName" type="text" placeholder="Nom complet de l'élève" required class="input-modern w-full px-4 py-3 rounded-xl text-white">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">URL Photo de l'Élève</label>
-                <input id="stuPhoto" type="url" placeholder="https://images.unsplash.com/..." class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono" style="text-transform: none;">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Classe d'Affectation*</label>
-                <select id="stuClass" required class="input-modern w-full px-4 py-3 rounded-xl text-white bg-slate-900 border border-white/10"></select>
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Sexe / Genre*</label>
-                <select id="stuSex" required class="input-modern w-full px-4 py-3 rounded-xl text-white bg-slate-900 border border-white/10">
-                    <option value="">Sexe</option>
-                    <option value="Masculin">Masculin</option>
-                    <option value="Féminin">Féminin</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Téléphone Tuteur Parent</label>
-                <input id="stuPhone" type="tel" placeholder="Ex: 243XXXXXXXXX" class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Frais Totaux Fixés ($ ou FC)*</label>
-                <input id="stuTotal" type="number" placeholder="Montant total attendu" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-bold font-mono">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Montant Déjà Perçu ($ ou FC)*</label>
-                <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-bold text-emerald-400 font-mono">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Année Académique</label>
-                <input id="stuYear" type="text" placeholder="ex: 2024-2025" value="2024-2025" required class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
-            </div>
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Date d'Inscription</label>
-                <input id="stuDate" type="date" class="input-modern w-full px-4 py-3 rounded-xl text-white font-mono">
-            </div>
+    <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8">
+        <h2 id="studentModalTitle" class="text-2xl font-bold mb-6">Ajouter un élève</h2>
+        <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4">
+            <input id="stuId" type="text" placeholder="ID unique (Ex: STD-2026-001)" required class="input-modern px-4 py-3 rounded-xl font-mono">
+            <input id="stuName" type="text" placeholder="Nom complet" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuPhoto" type="url" placeholder="URL photo (optionnel)" class="input-modern px-4 py-3 rounded-xl">
+            <select id="stuClass" required class="input-modern px-4 py-3 rounded-xl"></select>
+            <select id="stuSex" required class="input-modern px-4 py-3 rounded-xl">
+                <option value="">Sexe</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+            </select>
+            <input id="stuPhone" type="tel" placeholder="Téléphone parent" class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuTotal" type="number" placeholder="Montant total à payer" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuYear" type="text" placeholder="Année scolaire (ex: 2025-2026)" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuDate" type="date" class="input-modern px-4 py-3 rounded-xl">
             <div class="md:col-span-2 flex gap-3 mt-4">
-                <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold text-white transition">Enregistrer</button>
-                <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10 hover:bg-white/20 transition">Annuler</button>
+                <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold">Enregistrer</button>
+                <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10">Annuler</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div class="spinner"></div></div>
+<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div class="spinner"></div></div>
 
 <script>
-// =============== CONFIGURATION ET ALLOCATION DE DONNÉES ===============
-// COPIE TON URL APPS SCRIPT WEB APP ICI POUR ASSURER LA SYNCHRO DIRECTE AVEC TON FICHIER GOOGLE SHEET
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKMy7xYHdTYsfNmrr1EuD1IOoLPBZP5WG8XGGXWNfuYynvdXde_VS-9xmFWLTZ2B_X/exec";
-
+// =============== DATA MANAGEMENT ===============
+let USE_FIREBASE = false;
 let students = [];
 let classes = [];
 let editingStudentId = null;
-let chartStatusInstance = null;
-let chartClassInstance = null;
+let charts = {};
 
+// Jeu de données de démo actualisé incluant des exemples d'ID conformes à ta structure
 const DEMO_STUDENTS = [
-    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200', class: '4HSC A', sex: 'Masculin', phone: '243812345678', total: 500, paid: 500, year: '2024-2025', date: '2024-10-15' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: '', class: '1ère Primaire A', sex: 'Féminin', phone: '243823456789', total: 300, paid: 200, year: '2024-2025', date: '2024-10-10' },
-    { id: 'STU003', name: 'Tshibanda Paul', photo: '', class: '4HSC A', sex: 'Masculin', phone: '243834567890', total: 500, paid: 450, year: '2024-2025', date: '2024-11-02' },
-    { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'Féminin', phone: '243845678901', total: 600, paid: 600, year: '2024-2025', date: '2024-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: '', class: '2ème Primaire B', sex: 'Masculin', phone: '243856789012', total: 350, paid: 150, year: '2024-2025', date: '2024-10-05' }
+    { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-10-15' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-10' },
+    { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
+    { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-10-05' }
 ];
 
-const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A'];
+const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A', '5e Commerciale'];
 
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
+// Initialisation initiale
+document.addEventListener('firebaseReady', () => { 
+    try { USE_FIREBASE = true; loadData(); } catch(e) { initDemo(); }
 });
+setTimeout(() => { if (!USE_FIREBASE) initDemo(); }, 2000);
+
+function initDemo() {
+    const saved = localStorage.getItem('spm_students');
+    const savedClasses = localStorage.getItem('spm_classes');
+    students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
+    classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
+    saveLocal();
+    updateStats();
+    populateClassSelect();
+}
 
 function saveLocal() {
     localStorage.setItem('spm_students', JSON.stringify(students));
@@ -429,54 +443,35 @@ function saveLocal() {
 
 async function loadData() {
     showLoading();
-    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
-        try {
-            const res = await fetch(SCRIPT_URL);
-            const cloudData = await res.json();
-            if (cloudData.success) {
-                students = cloudData.students || [];
-                classes = cloudData.classes || DEMO_CLASSES;
-                saveLocal();
-            } else {
-                fallbackToLocal();
-            }
-        } catch (e) {
-            console.warn("Échec cloud, bascule locale.");
-            fallbackToLocal();
+    try {
+        if (USE_FIREBASE && window.db) {
+            const { collection, getDocs } = window.firebaseFunctions;
+            const snap = await getDocs(collection(window.db, 'students'));
+            students = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+            const csnap = await getDocs(collection(window.db, 'classes'));
+            classes = csnap.docs.map(d => d.data().name);
+            if (classes.length === 0) classes = DEMO_CLASSES;
         }
-    } else {
-        fallbackToLocal();
-    }
+    } catch(e) { console.error(e); initDemo(); return; }
     hideLoading();
     updateStats();
     populateClassSelect();
-    renderStudentsTable();
-    renderPaymentsTable();
-    renderClassesGrid();
-}
-
-function fallbackToLocal() {
-    const saved = localStorage.getItem('spm_students');
-    const savedClasses = localStorage.getItem('spm_classes');
-    students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
-    classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
-    saveLocal();
 }
 
 function updateStats() {
     const total = students.length;
-    const totalPaid = students.reduce((s, st) => s + (parseFloat(st.paid) || 0), 0);
-    const late = students.filter(s => (parseFloat(s.paid) || 0) < (parseFloat(s.total) || 0)).length;
+    const totalPaid = students.reduce((s, st) => s + (Number(st.paid) || 0), 0);
+    const late = students.filter(s => (Number(s.paid) || 0) < (Number(s.total) || 0)).length;
     
     animateNumber('statStudents', total);
     animateNumber('statPaid', totalPaid);
     animateNumber('statLate', late);
     animateNumber('statClasses', classes.length);
-    
+
     if (document.getElementById('dashStudents')) {
         document.getElementById('dashStudents').textContent = total;
         document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
-        document.getElementById('dashRemaining').textContent = students.reduce((s,st) => s + ((parseFloat(st.total)||0)-(parseFloat(st.paid)||0)), 0).toLocaleString() + ' FC';
+        document.getElementById('dashRemaining').textContent = students.reduce((s,st) => s + ((Number(st.total)||0)-(Number(st.paid)||0)), 0).toLocaleString() + ' FC';
         document.getElementById('dashClasses').textContent = classes.length;
     }
 }
@@ -485,11 +480,11 @@ function animateNumber(id, target) {
     const el = document.getElementById(id);
     if (!el) return;
     let current = 0;
-    const step = Math.max(1, Math.ceil(target / 40));
+    const step = Math.max(1, Math.ceil(target / 30));
     const timer = setInterval(() => {
         current += step;
         if (current >= target) { current = target; clearInterval(timer); }
-        el.textContent = current.toLocaleString();
+        el.textContent = id === 'statPaid' ? current.toLocaleString() + " FC" : current.toLocaleString();
     }, 25);
 }
 
@@ -504,354 +499,318 @@ function populateClassSelect() {
     }
 }
 
-// =============== COMPOSANT DE FILTRAGE ET RECHERCHE PUBLIQUE ===============
-function showSearchById() { hideSections(); document.getElementById('searchByIdSection').classList.remove('hidden'); document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'}); }
-function showSearchByClass() { hideSections(); document.getElementById('searchByClassSection').classList.remove('hidden'); document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); }
+// =============== MODULE DE RECHERCHE PAR ID AVANCE (SaaS PREMIUM) ===============
+function showSearchById() { 
+    hideSections(); 
+    document.getElementById('searchByIdSection').classList.remove('hidden'); 
+    document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'}); 
+}
+function showSearchByClass() { 
+    hideSections(); 
+    document.getElementById('searchByClassSection').classList.remove('hidden'); 
+    document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); 
+}
 function hideSections() {
     document.getElementById('searchByIdSection').classList.add('hidden');
     document.getElementById('searchByClassSection').classList.add('hidden');
 }
 
-// 1. RECHERCHE PAR ID AVEC ACCÈS DIRECTIONNEL LIÉ
-function searchById() {
-    const id = document.getElementById('searchIdInput').value.trim().toUpperCase();
-    const result = document.getElementById('searchResultById');
-    if (!id) return;
+/**
+ * Exécute la recherche par identifiant avec simulation de pipeline de chargement
+ */
+async function searchById() {
+    const idInput = document.getElementById('searchIdInput');
+    const id = idInput.value.trim();
+    const resultContainer = document.getElementById('searchResultById');
+    const loader = document.getElementById('searchCardLoader');
     
-    const student = students.find(s => s.id.toString().toUpperCase() === id);
+    if (!id) {
+        idInput.focus();
+        return;
+    }
+
+    // Phase 1: Reset & Affichage du loader asynchrone
+    resultContainer.innerHTML = '';
+    resultContainer.style.opacity = '0';
+    loader.classList.remove('hidden');
+
+    // Sécurisation & Simulation réseau premium de 750ms
+    await new Promise(resolve => setTimeout(resolve, 750));
+    
+    // Recherche insensitive à la casse
+    const student = students.find(s => s.id.trim().toLowerCase() === id.toLowerCase());
+    
+    loader.classList.add('hidden');
+
+    // Phase 2: Traitement de l'erreur "Élève introuvable"
     if (!student) {
-        result.innerHTML = `
-        <div class="glass rounded-2xl p-8 text-center border border-white/10 animate-fade-in">
-            <i class="fas fa-exclamation-circle text-5xl text-red-400 mb-4"></i>
-            <p class="text-xl font-bold">Aucun élève trouvé avec l'ID "${id}"</p>
-        </div>`;
+        resultContainer.innerHTML = `
+            <div class="glass border-red-500/30 bg-red-950/20 rounded-2xl p-8 text-center max-w-xl mx-auto flex flex-col items-center gap-3 shadow-xl backdrop-blur-md">
+                <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-2">
+                    <i class="fas fa-user-slash text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-red-400">Élève Introuvable</h3>
+                <p class="text-gray-400 text-sm max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-2 py-0.5 rounded">${id}</span> ne correspond à aucun dossier actif dans notre base de données.</p>
+                <span class="text-xs text-gray-500">Vérifiez la syntaxe ou contactez le guichet de l'établissement.</span>
+            </div>
+        `;
+        resultContainer.style.opacity = '1';
         return;
     }
-    result.innerHTML = renderStudentCard(student);
+
+    // Phase 3: Construction de la carte de résultat Premium (Glassmorphism & Structure SaaS)
+    resultContainer.innerHTML = buildPremiumStudentCard(student);
+    resultContainer.style.opacity = '1';
 }
 
-function renderStudentCard(s) {
-    const total = parseFloat(s.total) || 0;
-    const paid = parseFloat(s.paid) || 0;
+/**
+ * Génère le template HTML structurel pour le rendu de la carte d'un élève
+ */
+function buildPremiumStudentCard(s) {
+    const total = Number(s.total) || 0;
+    const paid = Number(s.paid) || 0;
     const remaining = total - paid;
-    let status = 'unpaid', statusText = 'Non payé', icon = 'times-circle';
     
-    if (paid >= total) { status = 'paid'; statusText = 'Solvable'; icon = 'check-circle'; }
-    else if (paid > 0) { status = 'partial'; statusText = 'Incomplet'; icon = 'exclamation-circle'; }
+    let badgeClass = 'badge-unpaid', statusText = 'Non Payé', icon = 'times-circle';
+    let statusSchool = s.year ? `Année : ${s.year}` : 'Statut Inconnu';
     
-    const photo = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff&size=200`;
-    
+    if (paid >= total) { 
+        badgeClass = 'badge-paid'; 
+        statusText = 'En règle'; 
+        icon = 'check-circle'; 
+    } else if (paid > 0) { 
+        badgeClass = 'badge-partial'; 
+        statusText = 'Solde Incomplet'; 
+        icon = 'exclamation-circle'; 
+    }
+
+    // Fallback UI-Avatar si la photo n'est pas fournie ou invalide
+    const finalPhoto = s.photo && s.photo.trim() !== '' 
+        ? s.photo 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=3b82f6&color=fff&size=250&bold=true`;
+
     return `
-    <div class="glass rounded-3xl p-6 md:p-8 max-w-2xl mx-auto flex flex-col md:flex-row gap-6 items-center border border-white/10 shadow-2xl animate-fade-in">
-        <div class="w-32 h-32 rounded-2xl overflow-hidden border-4 border-white/10 shadow-md relative bg-slate-900">
-            <img src="${photo}" alt="${s.name}" class="w-full h-full object-cover">
+        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all hover:border-white/30">
+            <div class="absolute -right-10 -bottom-10 opacity-5 text-9xl pointer-events-none">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-6 items-center md:items-start relative z-10">
+                <div class="flex-shrink-0 text-center">
+                    <div class="relative inline-block">
+                        <img src="${finalPhoto}" alt="${s.name}" class="w-32 h-32 md:w-36 md:h-36 rounded-2xl object-cover mx-auto border-4 border-white/10 shadow-xl bg-slate-800">
+                        <div class="absolute -bottom-2 right-1/2 translate-x-1/2 md:translate-x-0 md:right-[-8px]">
+                            <span class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white shadow-md border-2 border-[#161a33]" title="Élève Actif">
+                                <i class="fas fa-circle text-[8px] animate-pulse"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="${badgeClass} inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
+                            <i class="fas fa-${icon}"></i> ${statusText}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex-1 w-full text-center md:text-left flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
+                            <h3 class="text-2xl font-black text-white tracking-tight">${s.name}</h3>
+                            <span class="text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-emerald-400 font-mono self-center md:self-start">
+                                ${statusSchool}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 my-4 p-4 rounded-xl bg-black/20 border border-white/5">
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Identifiant ID</p>
+                                <p class="font-mono text-sm font-semibold text-blue-400">${s.id}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Classe Affectée</p>
+                                <p class="text-sm font-semibold text-white">${s.class}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Genre</p>
+                                <p class="text-sm font-medium text-gray-300">${s.sex === 'M' ? 'Masculin' : 'Féminin'}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Contact Parent</p>
+                                <p class="text-sm font-medium text-gray-300 font-mono">${s.phone || 'Non renseigné'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-white/10 pt-4 mt-2 grid grid-cols-3 gap-2 text-center md:text-left">
+                        <div>
+                            <span class="text-[10px] text-gray-400 block uppercase">Frais Total</span>
+                            <span class="text-md font-extrabold text-white">${total.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-400 block uppercase">Montant Payé</span>
+                            <span class="text-md font-extrabold text-emerald-400">${paid.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-400 block uppercase">Reste Obligatoire</span>
+                            <span class="text-md font-extrabold ${remaining > 0 ? 'text-red-400' : 'text-gray-500'}">${remaining.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="flex-1 w-full text-center md:text-left space-y-3">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                <h3 class="text-2xl font-black tracking-tight text-white">${s.name}</h3>
-                <span class="badge-${status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                    <i class="fas fa-${icon}"></i> ${statusText}
-                </span>
-            </div>
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-300 font-mono text-left">
-                <div><span class="text-gray-500 font-sans">ID Unique:</span> <span class="text-emerald-400 font-bold">${s.id}</span></div>
-                <div><span class="text-gray-500 font-sans">Classe:</span> ${s.class}</div>
-                <div><span class="text-gray-500 font-sans">Sexe:</span> ${s.sex}</div>
-                <div><span class="text-gray-500 font-sans">Tuteur:</span> ${s.phone || 'N/A'}</div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs font-mono">
-                <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl"><span class="block text-[10px] text-gray-400 uppercase font-sans">Fixé</span><span class="text-sm font-extrabold text-white">${total} FC</span></div>
-                <div class="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl"><span class="block text-[10px] text-emerald-400 uppercase font-sans">Perçu</span><span class="text-sm font-extrabold text-emerald-400">${paid} FC</span></div>
-                <div class="bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl"><span class="block text-[10px] text-red-400 uppercase font-sans">Reste</span><span class="text-sm font-extrabold text-red-400">${remaining} FC</span></div>
-            </div>
-            <div class="pt-2 flex justify-end">
-                <button onclick="viewInFolder('${s.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5">
-                    <i class="fas fa-folder-open"></i> 👉 Ouvrir Dossier Admin
-                </button>
-            </div>
-        </div>
-    </div>`;
+    `;
 }
 
-// 2. RECHERCHE ET FILTRAGE CRITIQUE PAR CLASSE + MONTANT MINIMUM EXIGÉ
+// =============== RECHERCHE ET FILTRE PAR CLASSE ===============
+let filteredClassStudents = [];
 function searchByClass() {
-    const classVal = document.getElementById('classSelect').value;
-    const amountFilter = parseFloat(document.getElementById('amountFilter').value) || 0;
-    const resultDiv = document.getElementById('searchResultByClass');
+    const cls = document.getElementById('classSelect').value;
+    const res = document.getElementById('searchResultByClass');
+    if (!cls) { res.innerHTML = ''; return; }
     
-    if (!classVal) {
-        resultDiv.innerHTML = '';
+    filteredClassStudents = students.filter(s => s.class === cls);
+    renderClassResults();
+}
+
+function filterByAmount() {
+    renderClassResults();
+}
+
+function renderClassResults() {
+    const res = document.getElementById('searchResultByClass');
+    const amt = Number(document.getElementById('amountFilter').value) || 0;
+    
+    let list = filteredClassStudents;
+    if (amt > 0) {
+        list = list.filter(s => (Number(s.paid) || 0) >= amt);
+    }
+
+    if (list.length === 0) {
+        res.innerHTML = `<div class="glass rounded-2xl p-6 text-center text-gray-400">Aucun élève trouvé pour ces critères</div>`;
         return;
     }
-    
-    // Règle stricte demandée : même classe ET versement perçu >= montant ciblé
-    const filtered = students.filter(s => 
-        s.class === classVal && 
-        (parseFloat(s.paid) || 0) >= amountFilter
-    );
-    
-    if (filtered.length === 0) {
-        resultDiv.innerHTML = `
-        <div class="glass rounded-2xl p-8 text-center border border-white/10 animate-fade-in">
-            <i class="fas fa-search-minus text-4xl text-amber-400 mb-3"></i>
-            <p class="text-gray-300">Aucun élève de la classe <span class="text-white font-bold">"${classVal}"</span> n'a atteint le versement minimum de <span class="text-emerald-400 font-bold">${amountFilter} FC</span>.</p>
-        </div>`;
-        return;
-    }
-    
-    let tableRows = filtered.map(s => {
-        const remaining = (parseFloat(s.total) || 0) - (parseFloat(s.paid) || 0);
-        let badgeClass = 'badge-unpaid';
-        if (s.paid >= s.total) badgeClass = 'badge-paid';
-        else if (s.paid > 0) badgeClass = 'badge-partial';
-        
-        return `
-        <tr class="border-b border-white/5 hover:bg-white/5 transition text-sm">
-            <td class="px-4 py-3 font-mono text-emerald-400 font-bold">${s.id}</td>
-            <td class="px-4 py-3 font-semibold text-white">${s.name}</td>
-            <td class="px-4 py-3 text-gray-300">${s.sex}</td>
-            <td class="px-4 py-3 font-mono text-emerald-400 text-right font-bold">${s.paid} FC</td>
-            <td class="px-4 py-3 font-mono text-red-400 text-right font-bold">${remaining} FC</td>
-            <td class="px-4 py-3 text-center"><span class="${badgeClass} px-2.5 py-1 rounded-full text-[11px] font-bold">${s.paid >= s.total ? 'Payé' : 'Incomplet'}</span></td>
-            <td class="px-4 py-3 text-center">
-                <button onclick="viewStudentDetailsDirectly('${s.id}')" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 mx-auto">
-                    <i class="fas fa-user"></i> Voir Fiche
-                </button>
-            </td>
-        </tr>`;
-    }).join('');
-    
-    resultDiv.innerHTML = `
-    <div class="glass rounded-2xl overflow-hidden border border-white/10 shadow-xl mt-6 animate-fade-in">
-        <div class="p-4 bg-white/5 border-b border-white/10 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Registre : ${filtered.length} Éléve(s) Trouvé(s)</span>
-            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-500/30 font-mono font-bold">Paiement égal ou supérieur à : ${amountFilter} FC</span>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-black/20 text-gray-400 text-xs uppercase tracking-wider">
+
+    res.innerHTML = `
+        <div class="glass rounded-2xl overflow-hidden mt-4">
+            <table class="w-full text-sm">
+                <thead class="bg-white/5 text-xs uppercase">
                     <tr>
-                        <th class="px-4 py-3">ID Unique</th>
-                        <th class="px-4 py-3">Nom de l'Élève</th>
-                        <th class="px-4 py-3">Sexe</th>
-                        <th class="px-4 py-3 text-right">Versement Perçu</th>
-                        <th class="px-4 py-3 text-right">Reste Exigé</th>
-                        <th class="px-4 py-3 text-center">Statut</th>
-                        <th class="px-4 py-3 text-center">Action</th>
+                        <th class="p-3 text-left">ID</th>
+                        <th class="p-3 text-left">Nom</th>
+                        <th class="p-3 text-left">Payé</th>
+                        <th class="p-3 text-left">Reste</th>
+                        <th class="p-3 text-left">Statut</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">${tableRows}</tbody>
+                <tbody>
+                    ${list.map(s => {
+                        const total = Number(s.total) || 0;
+                        const paid = Number(s.paid) || 0;
+                        const rem = total - paid;
+                        let st = 'unpaid', txt = 'Non payé';
+                        if (paid >= total) { st = 'paid'; txt = 'Payé'; }
+                        else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
+                        return `<tr class="border-t border-white/5">
+                            <td class="p-3 font-mono">${s.id}</td>
+                            <td class="p-3 font-bold">${s.name}</td>
+                            <td class="p-3 text-emerald-400">${paid.toLocaleString()} FC</td>
+                            <td class="p-3 text-red-400">${rem.toLocaleString()} FC</td>
+                            <td class="p-3"><span class="badge-${st} px-2 py-0.5 rounded text-xs">${txt}</span></td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
             </table>
-        </div>
-    </div>`;
+        </div>`;
 }
 
-function viewStudentDetailsDirectly(id) {
-    showSearchById();
-    document.getElementById('searchIdInput').value = id;
-    searchById();
-}
-
-function viewInFolder(id) {
-    showLoginModal();
-    document.getElementById('loginEmail').value = "admin@school.cd";
-    document.getElementById('loginPassword').value = "admin123";
-    displayToast("Cliquez sur connecter pour ouvrir le dossier central.");
-}
-
-// =============== FONCTIONNALITÉS LOGICIEL ADMINISTRATION ===============
+// =============== ADMINISTRATION LOGIQUE ===============
 function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
 function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginError').classList.add('hidden'); }
 
-function adminLogin(e) {
+async function adminLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass = document.getElementById('loginPassword').value.trim();
-    
-    if (email === "admin@school.cd" && pass === "admin123") {
-        hideLoginModal();
-        document.getElementById('homePage').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-        showAdminSection('dashboard');
-        displayToast("Session connectée - Direction RDC");
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    const err = document.getElementById('loginError');
+
+    if (email === 'admin@school.cd' && pass === 'admin123') {
+        successLogin();
+        return;
+    }
+
+    if (USE_FIREBASE && window.auth) {
+        showLoading();
+        try {
+            const { signInWithEmailAndPassword } = window.firebaseFunctions;
+            await signInWithEmailAndPassword(window.auth, email, pass);
+            successLogin();
+        } catch(e) {
+            err.textContent = "Identifiants Firebase incorrects";
+            err.classList.remove('hidden');
+        }
+        hideLoading();
     } else {
-        const err = document.getElementById('loginError');
-        err.textContent = "Combinaison erronée. Accès refusé.";
+        err.textContent = "Identifiants démo erronés";
         err.classList.remove('hidden');
     }
 }
 
+function successLogin() {
+    hideLoginModal();
+    document.getElementById('homePage').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    showAdminSection('dashboard');
+}
+
 function adminLogout() {
+    if (USE_FIREBASE && window.auth) {
+        window.firebaseFunctions.signOut(window.auth);
+    }
     document.getElementById('adminDashboard').classList.add('hidden');
     document.getElementById('homePage').classList.remove('hidden');
-    displayToast("Déconnexion sécurisée.");
 }
 
 function showAdminSection(sec) {
     document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
     document.getElementById(`adminSection_${sec}`).classList.remove('hidden');
-    
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-    event?.currentTarget?.classList?.add('active');
     
+    // Gérer l'état actif sur la navigation
+    event?.currentTarget?.classList?.add('active');
+
     if (sec === 'dashboard') renderCharts();
     if (sec === 'students') renderStudentsTable();
     if (sec === 'payments') renderPaymentsTable();
-    if (sec === 'classes') renderClassesGrid();
+    if (sec === 'classes') renderClassesManagement();
 }
 
-// =============== GESTIONNAIRE CRUD (ÉCRITURE / MODIFICATION) ===============
-function showStudentModal() {
-    editingStudentId = null;
-    document.getElementById('studentModalTitle').textContent = "Inscrire un nouvel élève";
-    document.getElementById('stuId').disabled = false;
-    document.getElementById('stuId').value = "";
-    document.getElementById('stuName').value = "";
-    document.getElementById('stuPhoto').value = "";
-    document.getElementById('stuClass').value = "";
-    document.getElementById('stuSex').value = "";
-    document.getElementById('stuPhone').value = "";
-    document.getElementById('stuTotal').value = "";
-    document.getElementById('stuPaid').value = "0";
-    document.getElementById('stuYear').value = "2024-2025";
-    document.getElementById('stuDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('studentModal').classList.remove('hidden');
-}
-
-function editStudent(id) {
-    const s = students.find(x => x.id === id);
-    if (!s) return;
-    editingStudentId = id;
-    document.getElementById('studentModalTitle').textContent = "Modifier la fiche de versement";
-    document.getElementById('stuId').disabled = true;
-    document.getElementById('stuId').value = s.id;
-    document.getElementById('stuName').value = s.name;
-    document.getElementById('stuPhoto').value = s.photo || "";
-    document.getElementById('stuClass').value = s.class || "";
-    document.getElementById('stuSex').value = s.sex || "";
-    document.getElementById('stuPhone').value = s.phone || "";
-    document.getElementById('stuTotal').value = s.total || "";
-    document.getElementById('stuPaid').value = s.paid || "0";
-    document.getElementById('stuYear').value = s.year || "2024-2025";
-    document.getElementById('stuDate').value = s.date ? s.date.split('T')[0] : "";
-    document.getElementById('studentModal').classList.remove('hidden');
-}
-
-async function saveStudent(e) {
-    e.preventDefault();
-    showLoading();
-    
-    const payload = {
-        id: document.getElementById('stuId').value.trim().toUpperCase(),
-        name: document.getElementById('stuName').value.trim(),
-        photo: document.getElementById('stuPhoto').value.trim(),
-        class: document.getElementById('stuClass').value,
-        sex: document.getElementById('stuSex').value,
-        phone: document.getElementById('stuPhone').value.trim(),
-        total: parseFloat(document.getElementById('stuTotal').value) || 0,
-        paid: parseFloat(document.getElementById('stuPaid').value) || 0,
-        year: document.getElementById('stuYear').value.trim(),
-        date: document.getElementById('stuDate').value || new Date().toISOString().split('T')[0]
-    };
-
-    if (editingStudentId) {
-        const idx = students.findIndex(x => x.id === editingStudentId);
-        if (idx !== -1) students[idx] = payload;
-    } else {
-        if (students.some(x => x.id.toUpperCase() === payload.id)) {
-            hideLoading();
-            alert("Erreur : Cet ID unique d'élève existe déjà.");
-            return;
-        }
-        students.push(payload);
-    }
-
-    saveLocal();
-    
-    // Envoi synchrone vers Google Sheet
-    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "save", data: payload })
-            });
-        } catch(err) { console.error("Erreur Cloud Sync", err); }
-    }
-
-    hideStudentModal();
-    await loadData();
-    displayToast("Matrice élève mise à jour !");
-}
-
-async function deleteStudent(id) {
-    if (!confirm(`Supprimer définitivement l'élève ${id} du serveur central RDC ?`)) return;
-    showLoading();
-    
-    students = students.filter(s => s.id !== id);
-    saveLocal();
-
-    if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_")) {
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "delete", data: { id: id } })
-            });
-        } catch(err) { console.error(err); }
-    }
-    
-    await loadData();
-    hideLoading();
-    displayToast("Enregistrement retiré.", "error");
-}
-
-function addClass() {
-    const name = prompt("Entrez le nom de la nouvelle classe (Ex: 5e Humanité Littéraire) :");
-    if (name && !classes.includes(name)) {
-        classes.push(name);
-        saveLocal();
-        populateClassSelect();
-        renderClassesGrid();
-        displayToast("Classe ajoutée !");
-    }
-}
-
-function hideStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
-function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
-
-// =============== ALGORITHMES DE RENDU DE TABLEAUX ===============
+// =============== BACKEND REQUÊTES COMPOSANTS ===============
 function renderStudentsTable() {
-    const searchWord = document.getElementById('searchStudentAdmin').value.trim().toLowerCase();
+    const q = document.getElementById('searchStudentAdmin').value.toLowerCase();
     const tbody = document.getElementById('studentsTableBody');
-    if (!tbody) return;
-    
-    const filtered = students.filter(s => 
-        s.name.toLowerCase().includes(searchWord) || 
-        s.id.toLowerCase().includes(searchWord) ||
-        s.class.toLowerCase().includes(searchWord)
-    );
-    
+    const filtered = students.filter(s => s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q));
+
     tbody.innerHTML = filtered.map(s => {
-        const total = parseFloat(s.total) || 0;
-        const paid = parseFloat(s.paid) || 0;
-        const remaining = total - paid;
-        let badge = 'badge-unpaid', txt = 'Non payé';
-        
-        if (paid >= total) { badge = 'badge-paid'; txt = 'Payé'; }
-        else if (paid > 0) { badge = 'badge-partial'; txt = 'Incomplet'; }
-        
-        return `
-        <tr class="border-b border-white/5 hover:bg-white/5 transition text-slate-200">
-            <td class="px-4 py-3 font-mono font-bold text-emerald-400">${s.id}</td>
-            <td class="px-4 py-3 font-semibold text-white">${s.name}</td>
-            <td class="px-4 py-3 text-gray-300">${s.class}</td>
-            <td class="px-4 py-3 text-center text-gray-400">${s.sex}</td>
-            <td class="px-4 py-3 font-mono text-right text-emerald-400 font-bold">${paid} FC</td>
-            <td class="px-4 py-3 font-mono text-right text-red-400 font-bold">${remaining} FC</td>
-            <td class="px-4 py-3 text-center"><span class="${badge} px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider">${txt}</span></td>
-            <td class="px-4 py-3 text-center space-x-3">
-                <button onclick="editStudent('${s.id}')" class="text-blue-400 hover:text-blue-300 transition"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:text-red-300 transition"><i class="fas fa-trash"></i></button>
+        const total = Number(s.total) || 0;
+        const paid = Number(s.paid) || 0;
+        const rem = total - paid;
+        let st = 'unpaid', txt = 'Non payé';
+        if (paid >= total) { st = 'paid'; txt = 'Payé'; }
+        else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
+
+        return `<tr class="border-b border-white/5">
+            <td class="px-4 py-3 font-mono text-xs">${s.id}</td>
+            <td class="px-4 py-3 font-semibold">${s.name}</td>
+            <td class="px-4 py-3 text-xs">${s.class}</td>
+            <td class="px-4 py-3 text-xs">${s.sex}</td>
+            <td class="px-4 py-3 text-xs text-emerald-400">${paid.toLocaleString()}</td>
+            <td class="px-4 py-3 text-xs text-red-400">${rem.toLocaleString()}</td>
+            <td class="px-4 py-3"><span class="badge-${st} px-2 py-0.5 rounded text-[10px]">${txt}</span></td>
+            <td class="px-4 py-3 text-xs">
+                <div class="flex gap-2">
+                    <button onclick="editStudent('${s.id}')" class="text-blue-400 hover:text-white"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:text-white"><i class="fas fa-trash"></i></button>
+                </div>
             </td>
         </tr>`;
     }).join('');
@@ -859,154 +818,255 @@ function renderStudentsTable() {
 
 function renderPaymentsTable() {
     const tbody = document.getElementById('paymentsTableBody');
-    if (!tbody) return;
-    
-    const activePayments = students.filter(s => (parseFloat(s.paid) || 0) > 0);
-    tbody.innerHTML = activePayments.map(s => {
-        const remaining = (parseFloat(s.total) || 0) - (parseFloat(s.paid) || 0);
-        return `
-        <tr class="border-b border-white/5 text-slate-300 font-mono">
-            <td class="px-4 py-3 text-gray-500">${s.date || 'N/A'}</td>
-            <td class="px-4 py-3 font-sans font-semibold text-white">${s.name}</td>
-            <td class="px-4 py-3 font-sans text-gray-400">${s.class}</td>
-            <td class="px-4 py-3 text-right text-emerald-400 font-bold">+ ${s.paid} FC</td>
-            <td class="px-4 py-3 text-right text-gray-400">${remaining} FC</td>
-            <td class="px-4 py-3 text-center font-sans"><span class="badge-paid px-2 py-0.5 rounded text-[10px] uppercase font-bold">Validé</span></td>
+    const logs = [];
+    students.forEach(s => {
+        if ((Number(s.paid) || 0) > 0) {
+            logs.push({
+                date: s.date || 'N/A',
+                name: s.name,
+                class: s.class,
+                paid: Number(s.paid) || 0,
+                total: Number(s.total) || 0
+            });
+        }
+    });
+
+    tbody.innerHTML = logs.map(l => {
+        const rem = l.total - l.paid;
+        let st = rem <= 0 ? 'paid' : 'partial', txt = rem <= 0 ? 'Soldé' : 'Avance';
+        return `<tr class="border-b border-white/5">
+            <td class="px-4 py-3 text-xs font-mono text-gray-400">${l.date}</td>
+            <td class="px-4 py-3 font-medium">${l.name}</td>
+            <td class="px-4 py-3 text-xs">${l.class}</td>
+            <td class="px-4 py-3 text-emerald-400 font-bold">${l.paid.toLocaleString()} FC</td>
+            <td class="px-4 py-3 text-xs text-gray-400">${rem.toLocaleString()} FC</td>
+            <td class="px-4 py-3"><span class="badge-${st} px-2 py-0.5 rounded text-[10px]">${txt}</span></td>
         </tr>`;
     }).join('');
 }
 
-function renderClassesGrid() {
-    const container = document.getElementById('classesList');
-    if (!container) return;
-    
-    container.innerHTML = classes.map(c => {
+function renderClassesManagement() {
+    const list = document.getElementById('classesList');
+    list.innerHTML = classes.map(c => {
         const count = students.filter(s => s.class === c).length;
-        const totalClassPaid = students.filter(s => s.class === c).reduce((sum, s) => sum + (parseFloat(s.paid) || 0), 0);
-        return `
-        <div class="glass rounded-2xl p-5 border border-white/10 shadow-md card-hover">
-            <div class="flex items-center justify-between mb-3">
-                <h4 class="text-base font-bold text-white tracking-wide">${c}</h4>
-                <span class="bg-blue-500/20 text-blue-400 text-xs px-2.5 py-1 rounded-lg font-mono font-bold border border-blue-500/20">${count} Élèves</span>
+        return `<div class="glass rounded-xl p-5 flex justify-between items-center card-hover">
+            <div>
+                <h3 class="font-bold text-lg">${c}</h3>
+                <p class="text-xs text-gray-400">${count} Élève(s) enregistré(s)</p>
             </div>
-            <p class="text-[11px] text-gray-500 uppercase tracking-widest font-semibold">Total perçu :</p>
-            <p class="text-xl font-black text-emerald-400 font-mono">${totalClassPaid.toLocaleString()} FC</p>
+            <i class="fas fa-chalkboard text-2xl text-indigo-400/50"></i>
         </div>`;
     }).join('');
 }
 
-// =============== COMPOSANT STATISTIQUE DES GRAPHIQUES (CHART.JS) ===============
+// =============== ACTIONS ET FORMULAIRES ===============
+function showStudentModal() {
+    editingStudentId = null;
+    document.getElementById('studentModalTitle').textContent = "Ajouter un élève";
+    document.getElementById('stuId').disabled = false;
+    document.getElementById('stuId').value = '';
+    document.getElementById('stuName').value = '';
+    document.getElementById('stuPhoto').value = '';
+    document.getElementById('stuSex').value = '';
+    document.getElementById('stuPhone').value = '';
+    document.getElementById('stuTotal').value = '';
+    document.getElementById('stuPaid').value = '0';
+    document.getElementById('stuYear').value = '2025-2026';
+    document.getElementById('stuDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+
+function hideStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
+
+function editStudent(id) {
+    const s = students.find(st => st.id === id);
+    if (!s) return;
+    editingStudentId = id;
+    document.getElementById('studentModalTitle').textContent = "Modifier l'élève";
+    document.getElementById('stuId').value = s.id;
+    document.getElementById('stuId').disabled = true;
+    document.getElementById('stuName').value = s.name;
+    document.getElementById('stuPhoto').value = s.photo || '';
+    document.getElementById('stuClass').value = s.class;
+    document.getElementById('stuSex').value = s.sex;
+    document.getElementById('stuPhone').value = s.phone || '';
+    document.getElementById('stuTotal').value = s.total;
+    document.getElementById('stuPaid').value = s.paid;
+    document.getElementById('stuYear').value = s.year || '2025-2026';
+    document.getElementById('stuDate').value = s.date || '';
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+
+async function saveStudent(e) {
+    e.preventDefault();
+    showLoading();
+
+    const payload = {
+        id: document.getElementById('stuId').value.trim(),
+        name: document.getElementById('stuName').value.trim(),
+        photo: document.getElementById('stuPhoto').value.trim(),
+        class: document.getElementById('stuClass').value,
+        sex: document.getElementById('stuSex').value,
+        phone: document.getElementById('stuPhone').value.trim(),
+        total: Number(document.getElementById('stuTotal').value) || 0,
+        paid: Number(document.getElementById('stuPaid').value) || 0,
+        year: document.getElementById('stuYear').value.trim(),
+        date: document.getElementById('stuDate').value
+    };
+
+    if (editingStudentId) {
+        // Mode Edition
+        const idx = students.findIndex(st => st.id === editingStudentId);
+        if (idx !== -1) {
+            const target = students[idx];
+            students[idx] = { ...target, ...payload };
+            if (USE_FIREBASE && window.db && target._docId) {
+                try {
+                    const { updateDoc, doc } = window.firebaseFunctions;
+                    await updateDoc(doc(window.db, 'students', target._docId), payload);
+                } catch(e) { console.error(e); }
+            }
+        }
+    } else {
+        // Mode Création
+        if (students.some(st => st.id.toLowerCase() === payload.id.toLowerCase())) {
+            alert("Cet ID unique existe déjà !");
+            hideLoading();
+            return;
+        }
+        if (USE_FIREBASE && window.db) {
+            try {
+                const { collection, addDoc } = window.firebaseFunctions;
+                const ref = await addDoc(collection(window.db, 'students'), payload);
+                payload._docId = ref.id;
+            } catch(e) { console.error(e); }
+        }
+        students.push(payload);
+    }
+
+    saveLocal();
+    updateStats();
+    hideStudentModal();
+    renderStudentsTable();
+    hideLoading();
+}
+
+async function deleteStudent(id) {
+    if (!confirm("Voulez-vous vraiment supprimer cet élève ?")) return;
+    showLoading();
+    const idx = students.findIndex(s => s.id === id);
+    if (idx !== -1) {
+        const target = students[idx];
+        if (USE_FIREBASE && window.db && target._docId) {
+            try {
+                const { deleteDoc, doc } = window.firebaseFunctions;
+                await deleteDoc(doc(window.db, 'students', target._docId));
+            } catch(e) { console.error(e); }
+        }
+        students.splice(idx, 1);
+        saveLocal();
+        updateStats();
+        renderStudentsTable();
+    }
+    hideLoading();
+}
+
+function addClass() {
+    const name = prompt("Entrez le nom de la nouvelle classe :");
+    if (!name || name.trim() === '') return;
+    if (classes.includes(name.trim())) { alert("Cette classe existe déjà."); return; }
+    
+    classes.push(name.trim());
+    if (USE_FIREBASE && window.db) {
+        try {
+            const { collection, addDoc } = window.firebaseFunctions;
+            addDoc(collection(window.db, 'classes'), { name: name.trim() });
+        } catch(e) { console.error(e); }
+    }
+    saveLocal();
+    updateStats();
+    populateClassSelect();
+    renderClassesManagement();
+}
+
+// =============== CHARTS ENGINES ===============
 function renderCharts() {
-    const ctxStatus = document.getElementById('chartStatus');
-    const ctxClass = document.getElementById('chartClass');
+    const ctxStatus = document.getElementById('chartStatus')?.getContext('2d');
+    const ctxClass = document.getElementById('chartClass')?.getContext('2d');
     if (!ctxStatus || !ctxClass) return;
 
-    if (chartStatusInstance) chartStatusInstance.destroy();
-    if (chartClassInstance) chartClassInstance.destroy();
+    // Calculs métriques statuts
+    const totalRegle = students.filter(s => (Number(s.paid)||0) >= (Number(s.total)||0)).length;
+    const totalAvance = students.filter(s => (Number(s.paid)||0) > 0 && (Number(s.paid)||0) < (Number(s.total)||0)).length;
+    const totalNonPaye = students.filter(s => (Number(s.paid)||0) === 0).length;
 
-    const paid = students.filter(s => parseFloat(s.paid) >= parseFloat(s.total)).length;
-    const partial = students.filter(s => parseFloat(s.paid) > 0 && parseFloat(s.paid) < parseFloat(s.total)).length;
-    const unpaid = students.filter(s => (parseFloat(s.paid) || 0) === 0).length;
+    if (charts.status) charts.status.destroy();
+    if (charts.class) charts.class.destroy();
 
-    chartStatusInstance = new Chart(ctxStatus, {
+    charts.status = new Chart(ctxStatus, {
         type: 'doughnut',
         data: {
-            labels: ['Totalement Solvables', 'Paiements Partiels', 'Non Payés'],
+            labels: ['En règle', 'Incomplet', 'Non payé'],
             datasets: [{
-                data: [paid, partial, unpaid],
+                data: [totalRegle, totalAvance, totalNonPaye],
                 backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                 borderWidth: 0
             }]
         },
-        options: {
-            plugins: { legend: { labels: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } } }
-        }
+        options: { plugins: { legend: { labels: { color: '#fff' } } } }
     });
 
-    const classDataCollect = classes.map(c => students.filter(s => s.class === c).reduce((sum, s) => sum + (parseFloat(s.paid) || 0), 0));
+    // Calculs métriques classes
+    const classData = classes.map(c => {
+        return students.filter(s => s.class === c).reduce((sum, s) => sum + (Number(s.paid) || 0), 0);
+    });
 
-    chartClassInstance = new Chart(ctxClass, {
+    charts.class = new Chart(ctxClass, {
         type: 'bar',
         data: {
             labels: classes,
             datasets: [{
-                label: 'Fonds Perçus (FC)',
-                data: classDataCollect,
-                backgroundColor: 'rgba(59, 130, 246, 0.75)',
-                borderRadius: 6
+                label: 'Volume perçu (FC)',
+                data: classData,
+                backgroundColor: '#3b82f6',
+                borderRadius: 8
             }]
         },
         options: {
             scales: {
-                x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.03)' } },
-                y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.03)' } }
+                y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#fff' }, grid: { display: false } }
             },
             plugins: { legend: { labels: { color: '#fff' } } }
         }
     });
 }
 
-// =============== EXPORTS EXTÉRIEURS (PDF / EXCEL) ===============
+// =============== EXPORTS EXTENSIONS ===============
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.setFont("Helvetica", "bold");
-    doc.text("SCHOOL PAYMENT MANAGER - REPORT CENTRAL RDC", 14, 18);
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-    
-    let lineY = 28;
-    doc.text("ID Unique", 14, lineY);
-    doc.text("Nom de l'Élève", 35, lineY);
-    doc.text("Classe", 95, lineY);
-    doc.text("Perçu (FC)", 145, lineY);
-    doc.text("Attendu (FC)", 175, lineY);
-    doc.line(14, lineY + 2, 195, lineY + 2);
-    lineY += 8;
-
-    students.forEach(s => {
-        if (lineY > 275) { doc.addPage(); lineY = 20; }
-        doc.text(String(s.id), 14, lineY);
-        doc.text(String(s.name).substring(0, 28), 35, lineY);
-        doc.text(String(s.class).substring(0, 22), 95, lineY);
-        doc.text(String(s.paid), 145, lineY);
-        doc.text(String(s.total), 175, lineY);
-        lineY += 7;
+    doc.text("School Payment Manager - Liste Generale des Eleves", 14, 15);
+    let y = 25;
+    students.forEach((s, idx) => {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(`${idx+1}. ID: ${s.id} | Nom: ${s.name} | Classe: ${s.class} | Paye: ${s.paid} FC`, 14, y);
+        y += 8;
     });
-    doc.save("Registre_Financier_SchoolManager.pdf");
+    doc.save('Rapport_Eleves_SchoolPayment.pdf');
 }
 
 function exportExcel() {
-    const formatted = students.map(s => ({
-        "ID Unique": s.id,
-        "Nom de l'Élève": s.name,
-        "Classe": s.class,
-        "Genre": s.sex,
-        "Téléphone Parent": s.phone,
-        "Total Fixé": s.total,
-        "Montant Payé": s.paid,
-        "Reste à Percevoir": (parseFloat(s.total)||0)-(parseFloat(s.paid)||0),
-        "Année Académique": s.year,
-        "Date Versement": s.date
-    }));
-    const sheet = XLSX.utils.json_to_sheet(formatted);
-    const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, "Registre Central");
-    XLSX.writeFile(book, "Matrice_Financiere_OptiSchool.xlsx");
+    const ws = XLSX.utils.json_to_sheet(students.map(s => ({
+        ID: s.id, Nom: s.name, Classe: s.class, Genre: s.sex, Total: s.total, Paye: s.paid, Reste: (s.total-s.paid), Telephone: s.phone
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Élèves");
+    XLSX.writeFile(wb, "Rapport_Finances_School.xlsx");
 }
 
-// ALERTE FLOATING TOAST SYSTEM
-function displayToast(msg, type = "success") {
-    const toast = document.createElement("div");
-    toast.style.position = "fixed";
-    toast.style.bottom = "24px";
-    toast.style.right = "24px";
-    toast.style.zIndex = "9999";
-    toast.className = `glass p-4 rounded-2xl text-xs font-bold border ${type === 'error' ? 'border-red-500 text-red-400' : 'border-emerald-500 text-emerald-400'} shadow-2xl animate-fade-in`;
-    toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-ban' : 'fa-check-circle'} mr-2"></i>${msg}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-}
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
 </script>
 </body>
 </html>
