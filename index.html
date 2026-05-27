@@ -73,10 +73,6 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
                     <p class="text-xs text-gray-400">Manager RDC</p>
                 </div>
             </div>
-            <button onclick="showLoginModal()" class="gradient-btn-blue px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
-                <i class="fas fa-lock"></i>
-                <span class="hidden sm:inline">Administration</span>
-            </button>
         </div>
     </nav>
 
@@ -97,9 +93,6 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                 <button onclick="showSearchById()" class="gradient-btn px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
                     <i class="fas fa-id-card"></i> Recherche par ID
-                </button>
-                <button onclick="showSearchByClass()" class="gradient-btn-blue px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
-                    <i class="fas fa-users"></i> Recherche par Classe
                 </button>
             </div>
         </div>
@@ -133,70 +126,28 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 
             <div id="searchResultById" class="mt-8 transition-all duration-300"></div>
         </div>
-
-        <!-- SECTION RECHERCHE PAR CLASSE -->
-        <div id="searchByClassSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold flex items-center gap-3">
-                    <i class="fas fa-users text-blue-400"></i> Recherche par Classe
-                </h2>
-                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="grid md:grid-cols-2 gap-4 mb-6">
-                <select id="classSelect" onchange="searchByClass()" class="input-modern px-6 py-4 rounded-xl text-white">
-                    <option value="">-- Sélectionner une classe --</option>
-                </select>
-                <input id="amountFilter" type="number" placeholder="Filtrer par montant payé..." oninput="filterByAmount()" class="input-modern px-6 py-4 rounded-xl text-white placeholder-gray-400">
-            </div>
-            <div id="searchResultByClass"></div>
-        </div>
     </section>
-</div>
-
-<!-- MODAL DE CONNEXION ADMIN -->
-<div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-    <div class="glass-dark rounded-3xl p-8 max-w-md w-full modal">
-        <div class="text-center mb-6">
-            <div class="w-20 h-20 rounded-2xl gradient-btn-blue flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-shield-alt text-3xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold">Administration</h2>
-            <p class="text-gray-400 text-sm">Connectez-vous pour continuer</p>
-        </div>
-        <form onsubmit="adminLogin(event)" class="space-y-4">
-            <input id="loginEmail" type="email" placeholder="Email administrateur" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
-            <input id="loginPassword" type="password" placeholder="Mot de passe" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
-            <div id="loginError" class="hidden text-red-400 text-sm text-center"></div>
-            <button type="submit" class="gradient-btn w-full py-3 rounded-xl font-bold">Se connecter</button>
-            <button type="button" onclick="hideLoginModal()" class="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white">Annuler</button>
-        </form>
-    </div>
 </div>
 
 <div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div class="spinner"></div></div>
 
 <script>
 // =============== CONFIGURATION CSV GOOGLE SHEETS ===============
-// URL CSV publique du Google Sheet
 const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
 
 // =============== DATA MANAGEMENT ===============
 let students = [];
-let classes = [];
 let editingStudentId = null;
-let isAdminLoggedIn = false;
 
 // Jeu de données de démo
 const DEMO_STUDENTS = [
     { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
-    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-08-20' },
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-15' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-10' },
     { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
     { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-07-15' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-11-05' }
 ];
-
-const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A', '5e Commerciale'];
 
 // Initialisation au démarrage
 document.addEventListener('DOMContentLoaded', () => {
@@ -205,21 +156,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initializeApp() {
     const saved = localStorage.getItem('spm_students');
-    const savedClasses = localStorage.getItem('spm_classes');
     
     if (saved) students = JSON.parse(saved);
-    if (savedClasses) classes = JSON.parse(savedClasses);
     
-    if (!saved || !savedClasses) {
-        // Charger depuis Google Sheets ou démo
+    if (!saved) {
         await loadFromGoogleSheets();
     }
     
     if (students.length === 0) students = DEMO_STUDENTS;
-    if (classes.length === 0) classes = DEMO_CLASSES;
     
     saveLocal();
-    populateClassSelect();
 }
 
 // =============== CHARGER DEPUIS GOOGLE SHEETS CSV ===============
@@ -234,11 +180,6 @@ async function loadFromGoogleSheets() {
         
         if (result && result.length > 0) {
             students = result;
-            // Extraire les classes uniques
-            const uniqueClasses = [...new Set(students.map(s => s.class).filter(c => c))];
-            if (uniqueClasses.length > 0) {
-                classes = uniqueClasses;
-            }
             console.log(`✅ ${students.length} élèves chargés depuis Google Sheets`);
             saveLocal();
             return true;
@@ -257,7 +198,6 @@ function convertCSVToStudents(csvText) {
         
         const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
         
-        // Trouver les colonnes
         const idIndex = headers.findIndex(h => h.includes('id') || h.includes('identifiant'));
         const nameIndex = headers.findIndex(h => h.includes('nom') || h.includes('name'));
         const classIndex = headers.findIndex(h => h.includes('classe') || h.includes('class'));
@@ -279,7 +219,7 @@ function convertCSVToStudents(csvText) {
             const cells = lines[i].split(',').map(c => c.trim());
             const id = cells[idIndex];
             
-            if (!id) continue; // Ignorer les lignes sans ID
+            if (!id) continue;
             
             sheetStudents.push({
                 id: String(id),
@@ -304,19 +244,6 @@ function convertCSVToStudents(csvText) {
 
 function saveLocal() {
     localStorage.setItem('spm_students', JSON.stringify(students));
-    localStorage.setItem('spm_classes', JSON.stringify(classes));
-}
-
-function populateClassSelect() {
-    const select = document.getElementById('stuClass');
-    if (!select) {
-        setTimeout(populateClassSelect, 100);
-        return;
-    }
-    const select2 = document.getElementById('classSelect');
-    const options = classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    if (select) select.innerHTML = '<option value="">-- Sélectionner --</option>' + options;
-    if (select2) select2.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + options;
 }
 
 // =============== RECHERCHE PAR ID ===============
@@ -327,15 +254,8 @@ function showSearchById() {
     setTimeout(() => document.getElementById('searchIdInput').focus(), 300);
 }
 
-function showSearchByClass() { 
-    hideSections(); 
-    document.getElementById('searchByClassSection').classList.remove('hidden'); 
-    document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); 
-}
-
 function hideSections() {
     document.getElementById('searchByIdSection').classList.add('hidden');
-    document.getElementById('searchByClassSection').classList.add('hidden');
 }
 
 async function searchById() {
@@ -353,12 +273,10 @@ async function searchById() {
     resultContainer.style.opacity = '0';
     loader.classList.remove('hidden');
 
-    // Simule un délai réseau
     await new Promise(resolve => setTimeout(resolve, 500));
     
     loader.classList.add('hidden');
 
-    // Chercher l'élève
     let student = students.find(s => s.id.trim().toUpperCase() === id);
 
     if (!student) {
@@ -404,7 +322,7 @@ function buildPremiumStudentCard(s) {
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=3b82f6&color=fff&size=250&bold=true`;
 
     return `
-        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all fade-in">
+        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all duration-500 fade-in">
             <div class="absolute -right-10 -bottom-10 opacity-5 text-9xl pointer-events-none">
                 <i class="fas fa-graduation-cap"></i>
             </div>
@@ -486,9 +404,6 @@ function buildPremiumStudentCard(s) {
                         <button onclick="printStudentCard('${s.id}')" class="gradient-btn px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                             <i class="fas fa-print"></i> Imprimer
                         </button>
-                        <button onclick="downloadStudentPDF('${s.id}')" class="gradient-btn-blue px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
                     </div>
                 </div>
             </div>
@@ -496,7 +411,7 @@ function buildPremiumStudentCard(s) {
     `;
 }
 
-// =============== BONUS: IMPRESSION & PDF ===============
+// =============== IMPRESSION ===============
 function printStudentCard(studentId) {
     const student = students.find(s => s.id === studentId);
     if (!student) return;
@@ -587,105 +502,6 @@ function printStudentCard(studentId) {
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(() => printWindow.print(), 250);
-}
-
-function downloadStudentPDF(studentId) {
-    alert('Téléchargement PDF en cours... Cette fonctionnalité sera disponible prochainement.');
-}
-
-// =============== RECHERCHE ET FILTRE PAR CLASSE ===============
-let filteredClassStudents = [];
-
-function searchByClass() {
-    const cls = document.getElementById('classSelect').value;
-    const res = document.getElementById('searchResultByClass');
-    if (!cls) { res.innerHTML = ''; return; }
-    
-    filteredClassStudents = students.filter(s => s.class === cls);
-    renderClassResults();
-}
-
-function filterByAmount() {
-    renderClassResults();
-}
-
-function renderClassResults() {
-    const res = document.getElementById('searchResultByClass');
-    const amt = Number(document.getElementById('amountFilter').value) || 0;
-    
-    let list = filteredClassStudents;
-    if (amt > 0) {
-        list = list.filter(s => (Number(s.paid) || 0) >= amt);
-    }
-
-    if (list.length === 0) {
-        res.innerHTML = `<div class="glass rounded-2xl p-6 text-center text-gray-400">Aucun élève trouvé pour ces critères</div>`;
-        return;
-    }
-
-    res.innerHTML = `
-        <div class="glass rounded-2xl overflow-hidden mt-4">
-            <table class="w-full text-sm">
-                <thead class="bg-white/5 text-xs uppercase">
-                    <tr>
-                        <th class="p-3 text-left">ID</th>
-                        <th class="p-3 text-left">Nom</th>
-                        <th class="p-3 text-left">Payé</th>
-                        <th class="p-3 text-left">Reste</th>
-                        <th class="p-3 text-left">Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${list.map(s => {
-                        const total = Number(s.total) || 0;
-                        const paid = Number(s.paid) || 0;
-                        const rem = total - paid;
-                        let st = 'unpaid', txt = 'Non payé';
-                        if (paid >= total) { st = 'paid'; txt = 'Payé'; }
-                        else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
-                        return `<tr class="border-t border-white/5 hover:bg-white/5 transition-all">
-                            <td class="p-3 font-mono text-xs">${s.id}</td>
-                            <td class="p-3 font-bold">${s.name}</td>
-                            <td class="p-3 text-emerald-400">${paid.toLocaleString()} FC</td>
-                            <td class="p-3 text-red-400">${rem.toLocaleString()} FC</td>
-                            <td class="p-3"><span class="badge-${st} px-2 py-0.5 rounded text-xs">${txt}</span></td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>`;
-}
-
-// =============== ADMINISTRATION SÉCURISÉE ===============
-function showLoginModal() { 
-    document.getElementById('loginModal').classList.remove('hidden'); 
-}
-
-function hideLoginModal() { 
-    document.getElementById('loginModal').classList.add('hidden'); 
-    document.getElementById('loginError').classList.add('hidden'); 
-}
-
-async function adminLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPassword').value;
-    const err = document.getElementById('loginError');
-
-    // Validations de base
-    if (email === 'admin@school.cd' && pass === 'admin123') {
-        successLogin();
-        return;
-    }
-
-    err.textContent = "Identifiants incorrects";
-    err.classList.remove('hidden');
-}
-
-function successLogin() {
-    isAdminLoggedIn = true;
-    hideLoginModal();
-    alert('✅ Connexion réussie! (Fonctionnalité admin à compléter)');
 }
 
 function showLoading() {
