@@ -76,6 +76,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 .modal { animation: modalIn 0.3s ease-out; }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 .stat-number { font-variant-numeric: tabular-nums; }
+.error-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; }
 </style>
 </head>
 <body class="text-white">
@@ -86,6 +87,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
     <div class="blob bg-indigo-500 w-96 h-96 bottom-0 left-1/3" style="animation-delay: 10s;"></div>
 </div>
 
+<!-- PAGE D'ACCUEIL PUBLIQUE -->
 <div id="homePage" class="relative z-10 min-h-screen">
     <nav class="glass-dark sticky top-0 z-50 px-6 py-4">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
@@ -129,41 +131,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
-            <div class="glass rounded-2xl p-6 card-hover">
-                <div class="flex items-center justify-between mb-3">
-                    <i class="fas fa-user-graduate text-3xl text-green-400"></i>
-                    <span class="text-xs text-gray-400">TOTAL</span>
-                </div>
-                <div class="stat-number text-3xl font-black" id="statStudents">0</div>
-                <p class="text-sm text-gray-400 mt-1">Élèves enregistrés</p>
-            </div>
-            <div class="glass rounded-2xl p-6 card-hover">
-                <div class="flex items-center justify-between mb-3">
-                    <i class="fas fa-money-bill-wave text-3xl text-blue-400"></i>
-                    <span class="text-xs text-gray-400">FC</span>
-                </div>
-                <div class="stat-number text-3xl font-black" id="statPaid">0</div>
-                <p class="text-sm text-gray-400 mt-1">Montant total payé</p>
-            </div>
-            <div class="glass rounded-2xl p-6 card-hover">
-                <div class="flex items-center justify-between mb-3">
-                    <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
-                    <span class="text-xs text-gray-400">RETARD</span>
-                </div>
-                <div class="stat-number text-3xl font-black" id="statLate">0</div>
-                <p class="text-sm text-gray-400 mt-1">Élèves en retard</p>
-            </div>
-            <div class="glass rounded-2xl p-6 card-hover">
-                <div class="flex items-center justify-between mb-3">
-                    <i class="fas fa-chalkboard text-3xl text-indigo-400"></i>
-                    <span class="text-xs text-gray-400">CLASSES</span>
-                </div>
-                <div class="stat-number text-3xl font-black" id="statClasses">0</div>
-                <p class="text-sm text-gray-400 mt-1">Classes enregistrées</p>
-            </div>
-        </div>
-
+        <!-- SECTION RECHERCHE PAR ID - CONNECTÉE AU GOOGLE SHEET -->
         <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in relative overflow-hidden">
             <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
@@ -178,7 +146,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <div class="flex flex-col sm:flex-row gap-3">
                 <div class="relative flex-1">
                     <i class="fas fa-fingerprint absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input id="searchIdInput" type="text" placeholder="Ex: STD-2026-001, STU001..." class="input-modern w-full pl-12 pr-6 py-4 rounded-xl text-white placeholder-gray-500 font-mono tracking-wider text-lg" onkeyup="if(event.key === 'Enter') searchById()">
+                    <input id="searchIdInput" type="text" placeholder="Ex: STD-2026-001, STU001..." class="input-modern w-full pl-12 pr-6 py-4 rounded-xl text-white placeholder-gray-500 font-mono" onkeypress="if(event.key==='Enter') searchById()">
                 </div>
                 <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg shadow-green-500/20 whitespace-nowrap">
                     <i class="fas fa-search"></i> Lancer l'analyse
@@ -193,6 +161,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <div id="searchResultById" class="mt-8 transition-all duration-300"></div>
         </div>
 
+        <!-- SECTION RECHERCHE PAR CLASSE -->
         <div id="searchByClassSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
@@ -211,6 +180,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
     </section>
 </div>
 
+<!-- MODAL DE CONNEXION ADMIN -->
 <div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
     <div class="glass-dark rounded-3xl p-8 max-w-md w-full modal">
         <div class="text-center mb-6">
@@ -227,10 +197,10 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <button type="submit" class="gradient-btn w-full py-3 rounded-xl font-bold">Se connecter</button>
             <button type="button" onclick="hideLoginModal()" class="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white">Annuler</button>
         </form>
-        <p class="text-xs text-gray-500 text-center mt-4">Demo: admin@school.cd / admin123</p>
     </div>
 </div>
 
+<!-- DASHBOARD ADMIN SÉCURISÉ -->
 <div id="adminDashboard" class="hidden relative z-10 min-h-screen flex">
     <aside class="w-64 glass-dark fixed h-screen overflow-y-auto hidden lg:block">
         <div class="p-6 border-b border-white/10">
@@ -260,27 +230,28 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <button onclick="adminLogout()" class="text-red-400"><i class="fas fa-sign-out-alt text-xl"></i></button>
         </div>
 
+        <!-- DASHBOARD ADMIN AVEC STATS CONFIDENTIELLES -->
         <div id="adminSection_dashboard" class="admin-section">
             <h2 class="text-3xl font-bold mb-6">Tableau de bord</h2>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
-                    <div class="text-2xl font-bold" id="dashStudents">0</div>
+                    <div class="text-2xl font-bold stat-number" id="dashStudents">0</div>
                     <p class="text-xs text-gray-400">Élèves</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-money-bill text-2xl text-blue-400 mb-2"></i>
-                    <div class="text-2xl font-bold" id="dashPaid">0 FC</div>
+                    <div class="text-2xl font-bold stat-number" id="dashPaid">0 FC</div>
                     <p class="text-xs text-gray-400">Total payé</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-clock text-2xl text-yellow-400 mb-2"></i>
-                    <div class="text-2xl font-bold" id="dashRemaining">0 FC</div>
+                    <div class="text-2xl font-bold stat-number" id="dashRemaining">0 FC</div>
                     <p class="text-xs text-gray-400">Reste à payer</p>
                 </div>
                 <div class="glass rounded-2xl p-5 card-hover">
                     <i class="fas fa-chalkboard text-2xl text-indigo-400 mb-2"></i>
-                    <div class="text-2xl font-bold" id="dashClasses">0</div>
+                    <div class="text-2xl font-bold stat-number" id="dashClasses">0</div>
                     <p class="text-xs text-gray-400">Classes</p>
                 </div>
             </div>
@@ -296,6 +267,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
+        <!-- GESTION DES ÉLÈVES -->
         <div id="adminSection_students" class="admin-section hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h2 class="text-3xl font-bold">Gestion des élèves</h2>
@@ -325,6 +297,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
+        <!-- HISTORIQUE DES PAIEMENTS -->
         <div id="adminSection_payments" class="admin-section hidden">
             <h2 class="text-3xl font-bold mb-6">Historique des paiements</h2>
             <div class="glass rounded-2xl overflow-hidden">
@@ -346,6 +319,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
+        <!-- GESTION DES CLASSES -->
         <div id="adminSection_classes" class="admin-section hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold">Classes</h2>
@@ -354,6 +328,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             <div id="classesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
+        <!-- EXPORTS & RAPPORTS -->
         <div id="adminSection_reports" class="admin-section hidden">
             <h2 class="text-3xl font-bold mb-6">Exports & Rapports</h2>
             <div class="grid sm:grid-cols-2 gap-6">
@@ -372,24 +347,25 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
     </main>
 </div>
 
+<!-- MODAL AJOUT/MODIFICATION ÉLÈVE -->
 <div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
     <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8">
         <h2 id="studentModalTitle" class="text-2xl font-bold mb-6">Ajouter un élève</h2>
         <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4">
-            <input id="stuId" type="text" placeholder="ID unique (Ex: STD-2026-001)" required class="input-modern px-4 py-3 rounded-xl font-mono">
-            <input id="stuName" type="text" placeholder="Nom complet" required class="input-modern px-4 py-3 rounded-xl">
-            <input id="stuPhoto" type="url" placeholder="URL photo (optionnel)" class="input-modern px-4 py-3 rounded-xl">
-            <select id="stuClass" required class="input-modern px-4 py-3 rounded-xl"></select>
-            <select id="stuSex" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuId" type="text" placeholder="ID unique (Ex: STD-2026-001)" required class="input-modern px-4 py-3 rounded-xl font-mono text-white">
+            <input id="stuName" type="text" placeholder="Nom complet" required class="input-modern px-4 py-3 rounded-xl text-white">
+            <input id="stuPhoto" type="url" placeholder="URL photo (optionnel)" class="input-modern px-4 py-3 rounded-xl text-white">
+            <select id="stuClass" required class="input-modern px-4 py-3 rounded-xl text-white"></select>
+            <select id="stuSex" required class="input-modern px-4 py-3 rounded-xl text-white">
                 <option value="">Sexe</option>
                 <option value="M">Masculin</option>
                 <option value="F">Féminin</option>
             </select>
-            <input id="stuPhone" type="tel" placeholder="Téléphone parent" class="input-modern px-4 py-3 rounded-xl">
-            <input id="stuTotal" type="number" placeholder="Montant total à payer" required class="input-modern px-4 py-3 rounded-xl">
-            <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern px-4 py-3 rounded-xl">
-            <input id="stuYear" type="text" placeholder="Année scolaire (ex: 2025-2026)" required class="input-modern px-4 py-3 rounded-xl">
-            <input id="stuDate" type="date" class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuPhone" type="tel" placeholder="Téléphone parent" class="input-modern px-4 py-3 rounded-xl text-white">
+            <input id="stuTotal" type="number" placeholder="Montant total à payer" required class="input-modern px-4 py-3 rounded-xl text-white">
+            <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern px-4 py-3 rounded-xl text-white">
+            <input id="stuYear" type="text" placeholder="Année scolaire (ex: 2025-2026)" required class="input-modern px-4 py-3 rounded-xl text-white">
+            <input id="stuDate" type="date" class="input-modern px-4 py-3 rounded-xl text-white">
             <div class="md:col-span-2 flex gap-3 mt-4">
                 <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold">Enregistrer</button>
                 <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10">Annuler</button>
@@ -401,26 +377,32 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 <div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div class="spinner"></div></div>
 
 <script>
+// =============== CONFIGURATION GOOGLE SHEETS ===============
+const GOOGLE_SHEETS_ID = '1hkxX5NYa4gR1MpaePpoJLnV0LTAbs1XOhb8Ix5S-XFc';
+const SHEET_RANGE = 'Sheet1!A1:M1000'; // Ajuste selon tes colonnes
+const GOOGLE_SHEETS_API_KEY = 'AIzaSyDQDMlGHwwvYc3qyqt_k8vNX_QLJ0fR5wk'; // À remplacer par ta clé API
+
 // =============== DATA MANAGEMENT ===============
 let USE_FIREBASE = false;
 let students = [];
 let classes = [];
 let editingStudentId = null;
 let charts = {};
+let isAdminLoggedIn = false;
 
-// Jeu de données de démo actualisé incluant des exemples d'ID conformes à ta structure
+// Jeu de données de démo
 const DEMO_STUDENTS = [
     { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
-    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-10-15' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-10' },
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-05' },
     { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
     { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-10-05' }
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-10-08' },
 ];
 
 const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A', '5e Commerciale'];
 
-// Initialisation initiale
+// Initialisation
 document.addEventListener('firebaseReady', () => { 
     try { USE_FIREBASE = true; loadData(); } catch(e) { initDemo(); }
 });
@@ -432,7 +414,6 @@ function initDemo() {
     students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
     classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
     saveLocal();
-    updateStats();
     populateClassSelect();
 }
 
@@ -442,7 +423,6 @@ function saveLocal() {
 }
 
 async function loadData() {
-    showLoading();
     try {
         if (USE_FIREBASE && window.db) {
             const { collection, getDocs } = window.firebaseFunctions;
@@ -453,74 +433,81 @@ async function loadData() {
             if (classes.length === 0) classes = DEMO_CLASSES;
         }
     } catch(e) { console.error(e); initDemo(); return; }
-    hideLoading();
-    updateStats();
     populateClassSelect();
 }
 
-function updateStats() {
-    const total = students.length;
-    const totalPaid = students.reduce((s, st) => s + (Number(st.paid) || 0), 0);
-    const late = students.filter(s => (Number(s.paid) || 0) < (Number(s.total) || 0)).length;
+// =============== FETCH DEPUIS GOOGLE SHEETS ===============
+async function fetchFromGoogleSheets() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/${SHEET_RANGE}?key=${GOOGLE_SHEETS_API_KEY}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Erreur Google Sheets');
+        const data = await response.json();
+        return data.values || [];
+    } catch(error) {
+        console.error('Erreur fetch Google Sheets:', error);
+        return null;
+    }
+}
+
+// Convertir les données du Google Sheet en format élève
+function convertGoogleSheetToStudents(rows) {
+    if (!rows || rows.length < 2) return null;
     
-    animateNumber('statStudents', total);
-    animateNumber('statPaid', totalPaid);
-    animateNumber('statLate', late);
-    animateNumber('statClasses', classes.length);
-
-    if (document.getElementById('dashStudents')) {
-        document.getElementById('dashStudents').textContent = total;
-        document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
-        document.getElementById('dashRemaining').textContent = students.reduce((s,st) => s + ((Number(st.total)||0)-(Number(st.paid)||0)), 0).toLocaleString() + ' FC';
-        document.getElementById('dashClasses').textContent = classes.length;
+    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const idIndex = headers.findIndex(h => h.includes('id'));
+    const nameIndex = headers.findIndex(h => h.includes('nom'));
+    const classIndex = headers.findIndex(h => h.includes('classe'));
+    const paidIndex = headers.findIndex(h => h.includes('payé') || h.includes('paid'));
+    const totalIndex = headers.findIndex(h => h.includes('total'));
+    const photoIndex = headers.findIndex(h => h.includes('photo'));
+    const sexIndex = headers.findIndex(h => h.includes('sexe') || h.includes('sex'));
+    const phoneIndex = headers.findIndex(h => h.includes('téléphone') || h.includes('phone'));
+    
+    const sheetStudents = [];
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (idIndex === -1 || !row[idIndex]) continue; // Skip si pas d'ID
+        
+        sheetStudents.push({
+            id: String(row[idIndex]).trim(),
+            name: nameIndex >= 0 ? String(row[nameIndex] || '').trim() : '',
+            class: classIndex >= 0 ? String(row[classIndex] || '').trim() : '',
+            paid: paidIndex >= 0 ? Number(row[paidIndex]) || 0 : 0,
+            total: totalIndex >= 0 ? Number(row[totalIndex]) || 0 : 0,
+            photo: photoIndex >= 0 ? String(row[photoIndex] || '').trim() : '',
+            sex: sexIndex >= 0 ? String(row[sexIndex] || '').trim() : '',
+            phone: phoneIndex >= 0 ? String(row[phoneIndex] || '').trim() : '',
+            year: '2025-2026',
+            date: new Date().toISOString().split('T')[0]
+        });
     }
+    
+    return sheetStudents.length > 0 ? sheetStudents : null;
 }
 
-function animateNumber(id, target) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    let current = 0;
-    const step = Math.max(1, Math.ceil(target / 30));
-    const timer = setInterval(() => {
-        current += step;
-        if (current >= target) { current = target; clearInterval(timer); }
-        el.textContent = id === 'statPaid' ? current.toLocaleString() + " FC" : current.toLocaleString();
-    }, 25);
-}
-
-function populateClassSelect() {
-    const sel = document.getElementById('classSelect');
-    const stuClassSel = document.getElementById('stuClass');
-    if (sel) {
-        sel.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-    if (stuClassSel) {
-        stuClassSel.innerHTML = '<option value="">Choisir une classe</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-}
-
-// =============== MODULE DE RECHERCHE PAR ID AVANCE (SaaS PREMIUM) ===============
+// =============== RECHERCHE PAR ID CORRIGÉE ===============
 function showSearchById() { 
     hideSections(); 
     document.getElementById('searchByIdSection').classList.remove('hidden'); 
-    document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'}); 
+    document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'});
+    document.getElementById('searchIdInput').focus();
 }
+
 function showSearchByClass() { 
     hideSections(); 
     document.getElementById('searchByClassSection').classList.remove('hidden'); 
     document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); 
 }
+
 function hideSections() {
     document.getElementById('searchByIdSection').classList.add('hidden');
     document.getElementById('searchByClassSection').classList.add('hidden');
 }
 
-/**
- * Exécute la recherche par identifiant avec simulation de pipeline de chargement
- */
 async function searchById() {
     const idInput = document.getElementById('searchIdInput');
-    const id = idInput.value.trim();
+    const id = idInput.value.trim().toUpperCase();
     const resultContainer = document.getElementById('searchResultById');
     const loader = document.getElementById('searchCardLoader');
     
@@ -529,20 +516,30 @@ async function searchById() {
         return;
     }
 
-    // Phase 1: Reset & Affichage du loader asynchrone
     resultContainer.innerHTML = '';
     resultContainer.style.opacity = '0';
     loader.classList.remove('hidden');
 
-    // Sécurisation & Simulation réseau premium de 750ms
-    await new Promise(resolve => setTimeout(resolve, 750));
+    // Tente d'abord le Google Sheets
+    let sheetData = await fetchFromGoogleSheets();
+    let sheetStudents = sheetData ? convertGoogleSheetToStudents(sheetData) : null;
     
-    // Recherche insensitive à la casse
-    const student = students.find(s => s.id.trim().toLowerCase() === id.toLowerCase());
+    // Simule le délai réseau
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     loader.classList.add('hidden');
 
-    // Phase 2: Traitement de l'erreur "Élève introuvable"
+    // Cherche dans les données du Google Sheet d'abord, puis dans le local
+    let student = null;
+    
+    if (sheetStudents) {
+        student = sheetStudents.find(s => s.id.toUpperCase() === id);
+    }
+    
+    if (!student) {
+        student = students.find(s => s.id.trim().toUpperCase() === id);
+    }
+
     if (!student) {
         resultContainer.innerHTML = `
             <div class="glass border-red-500/30 bg-red-950/20 rounded-2xl p-8 text-center max-w-xl mx-auto flex flex-col items-center gap-3 shadow-xl backdrop-blur-md">
@@ -550,7 +547,7 @@ async function searchById() {
                     <i class="fas fa-user-slash text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-bold text-red-400">Élève Introuvable</h3>
-                <p class="text-gray-400 text-sm max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-2 py-0.5 rounded">${id}</span> ne correspond à aucun dossier actif dans notre base de données.</p>
+                <p class="text-gray-400 text-sm max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-2 py-0.5 rounded">${id}</span> ne correspond à aucun dossier actif.</p>
                 <span class="text-xs text-gray-500">Vérifiez la syntaxe ou contactez le guichet de l'établissement.</span>
             </div>
         `;
@@ -558,14 +555,10 @@ async function searchById() {
         return;
     }
 
-    // Phase 3: Construction de la carte de résultat Premium (Glassmorphism & Structure SaaS)
     resultContainer.innerHTML = buildPremiumStudentCard(student);
     resultContainer.style.opacity = '1';
 }
 
-/**
- * Génère le template HTML structurel pour le rendu de la carte d'un élève
- */
 function buildPremiumStudentCard(s) {
     const total = Number(s.total) || 0;
     const paid = Number(s.paid) || 0;
@@ -584,13 +577,12 @@ function buildPremiumStudentCard(s) {
         icon = 'exclamation-circle'; 
     }
 
-    // Fallback UI-Avatar si la photo n'est pas fournie ou invalide
     const finalPhoto = s.photo && s.photo.trim() !== '' 
         ? s.photo 
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=3b82f6&color=fff&size=250&bold=true`;
 
     return `
-        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all hover:border-white/30">
+        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all duration-300">
             <div class="absolute -right-10 -bottom-10 opacity-5 text-9xl pointer-events-none">
                 <i class="fas fa-graduation-cap"></i>
             </div>
@@ -600,7 +592,7 @@ function buildPremiumStudentCard(s) {
                     <div class="relative inline-block">
                         <img src="${finalPhoto}" alt="${s.name}" class="w-32 h-32 md:w-36 md:h-36 rounded-2xl object-cover mx-auto border-4 border-white/10 shadow-xl bg-slate-800">
                         <div class="absolute -bottom-2 right-1/2 translate-x-1/2 md:translate-x-0 md:right-[-8px]">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white shadow-md border-2 border-[#161a33]" title="Élève Actif">
+                            <span class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white shadow-md border-2 border-[#161a33]">
                                 <i class="fas fa-circle text-[8px] animate-pulse"></i>
                             </span>
                         </div>
@@ -663,6 +655,7 @@ function buildPremiumStudentCard(s) {
 
 // =============== RECHERCHE ET FILTRE PAR CLASSE ===============
 let filteredClassStudents = [];
+
 function searchByClass() {
     const cls = document.getElementById('classSelect').value;
     const res = document.getElementById('searchResultByClass');
@@ -711,7 +704,7 @@ function renderClassResults() {
                         if (paid >= total) { st = 'paid'; txt = 'Payé'; }
                         else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
                         return `<tr class="border-t border-white/5">
-                            <td class="p-3 font-mono">${s.id}</td>
+                            <td class="p-3 font-mono text-xs">${s.id}</td>
                             <td class="p-3 font-bold">${s.name}</td>
                             <td class="p-3 text-emerald-400">${paid.toLocaleString()} FC</td>
                             <td class="p-3 text-red-400">${rem.toLocaleString()} FC</td>
@@ -723,7 +716,7 @@ function renderClassResults() {
         </div>`;
 }
 
-// =============== ADMINISTRATION LOGIQUE ===============
+// =============== ADMINISTRATION SÉCURISÉE ===============
 function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
 function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginError').classList.add('hidden'); }
 
@@ -733,6 +726,7 @@ async function adminLogin(e) {
     const pass = document.getElementById('loginPassword').value;
     const err = document.getElementById('loginError');
 
+    // Validations de base
     if (email === 'admin@school.cd' && pass === 'admin123') {
         successLogin();
         return;
@@ -756,13 +750,16 @@ async function adminLogin(e) {
 }
 
 function successLogin() {
+    isAdminLoggedIn = true;
     hideLoginModal();
     document.getElementById('homePage').classList.add('hidden');
     document.getElementById('adminDashboard').classList.remove('hidden');
     showAdminSection('dashboard');
+    updateAdminStats();
 }
 
 function adminLogout() {
+    isAdminLoggedIn = false;
     if (USE_FIREBASE && window.auth) {
         window.firebaseFunctions.signOut(window.auth);
     }
@@ -775,8 +772,7 @@ function showAdminSection(sec) {
     document.getElementById(`adminSection_${sec}`).classList.remove('hidden');
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
     
-    // Gérer l'état actif sur la navigation
-    event?.currentTarget?.classList?.add('active');
+    if (event?.currentTarget) event.currentTarget.classList.add('active');
 
     if (sec === 'dashboard') renderCharts();
     if (sec === 'students') renderStudentsTable();
@@ -784,7 +780,23 @@ function showAdminSection(sec) {
     if (sec === 'classes') renderClassesManagement();
 }
 
-// =============== BACKEND REQUÊTES COMPOSANTS ===============
+// =============== STATS ADMIN CONFIDENTIELLES ===============
+function updateAdminStats() {
+    if (!isAdminLoggedIn) return;
+    
+    const total = students.length;
+    const totalPaid = students.reduce((s, st) => s + (Number(st.paid) || 0), 0);
+    const remaining = students.reduce((s,st) => s + ((Number(st.total)||0)-(Number(st.paid)||0)), 0);
+    
+    if (document.getElementById('dashStudents')) {
+        document.getElementById('dashStudents').textContent = total;
+        document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
+        document.getElementById('dashRemaining').textContent = remaining.toLocaleString() + ' FC';
+        document.getElementById('dashClasses').textContent = classes.length;
+    }
+}
+
+// =============== TABLES ET COMPOSANTS ===============
 function renderStudentsTable() {
     const q = document.getElementById('searchStudentAdmin').value.toLowerCase();
     const tbody = document.getElementById('studentsTableBody');
@@ -859,7 +871,7 @@ function renderClassesManagement() {
     }).join('');
 }
 
-// =============== ACTIONS ET FORMULAIRES ===============
+// =============== FORMULAIRES ===============
 function showStudentModal() {
     editingStudentId = null;
     document.getElementById('studentModalTitle').textContent = "Ajouter un élève";
@@ -915,7 +927,6 @@ async function saveStudent(e) {
     };
 
     if (editingStudentId) {
-        // Mode Edition
         const idx = students.findIndex(st => st.id === editingStudentId);
         if (idx !== -1) {
             const target = students[idx];
@@ -928,7 +939,6 @@ async function saveStudent(e) {
             }
         }
     } else {
-        // Mode Création
         if (students.some(st => st.id.toLowerCase() === payload.id.toLowerCase())) {
             alert("Cet ID unique existe déjà !");
             hideLoading();
@@ -945,7 +955,7 @@ async function saveStudent(e) {
     }
 
     saveLocal();
-    updateStats();
+    updateAdminStats();
     hideStudentModal();
     renderStudentsTable();
     hideLoading();
@@ -965,7 +975,7 @@ async function deleteStudent(id) {
         }
         students.splice(idx, 1);
         saveLocal();
-        updateStats();
+        updateAdminStats();
         renderStudentsTable();
     }
     hideLoading();
@@ -984,89 +994,102 @@ function addClass() {
         } catch(e) { console.error(e); }
     }
     saveLocal();
-    updateStats();
+    updateAdminStats();
     populateClassSelect();
     renderClassesManagement();
 }
 
-// =============== CHARTS ENGINES ===============
+function populateClassSelect() {
+    const sel = document.getElementById('classSelect');
+    const stuClassSel = document.getElementById('stuClass');
+    if (sel) {
+        sel.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    if (stuClassSel) {
+        stuClassSel.innerHTML = '<option value="">Choisir une classe</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+}
+
+// =============== CHARTS ===============
 function renderCharts() {
     const ctxStatus = document.getElementById('chartStatus')?.getContext('2d');
     const ctxClass = document.getElementById('chartClass')?.getContext('2d');
     if (!ctxStatus || !ctxClass) return;
 
-    // Calculs métriques statuts
     const totalRegle = students.filter(s => (Number(s.paid)||0) >= (Number(s.total)||0)).length;
     const totalAvance = students.filter(s => (Number(s.paid)||0) > 0 && (Number(s.paid)||0) < (Number(s.total)||0)).length;
-    const totalNonPaye = students.filter(s => (Number(s.paid)||0) === 0).length;
+    const totalUnpaid = students.filter(s => (Number(s.paid)||0) === 0).length;
 
-    if (charts.status) charts.status.destroy();
-    if (charts.class) charts.class.destroy();
-
-    charts.status = new Chart(ctxStatus, {
+    if (charts.chartStatus) charts.chartStatus.destroy();
+    charts.chartStatus = new Chart(ctxStatus, {
         type: 'doughnut',
         data: {
-            labels: ['En règle', 'Incomplet', 'Non payé'],
+            labels: ['Payé', 'Incomplet', 'Non Payé'],
             datasets: [{
-                data: [totalRegle, totalAvance, totalNonPaye],
+                data: [totalRegle, totalAvance, totalUnpaid],
                 backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { labels: { color: '#fff' } } } }
-    });
-
-    // Calculs métriques classes
-    const classData = classes.map(c => {
-        return students.filter(s => s.class === c).reduce((sum, s) => sum + (Number(s.paid) || 0), 0);
-    });
-
-    charts.class = new Chart(ctxClass, {
-        type: 'bar',
-        data: {
-            labels: classes,
-            datasets: [{
-                label: 'Volume perçu (FC)',
-                data: classData,
-                backgroundColor: '#3b82f6',
-                borderRadius: 8
+                borderColor: '#0f1729',
+                borderWidth: 3
             }]
         },
         options: {
-            scales: {
-                y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                x: { ticks: { color: '#fff' }, grid: { display: false } }
-            },
+            responsive: true,
+            maintainAspectRatio: true,
             plugins: { legend: { labels: { color: '#fff' } } }
+        }
+    });
+
+    const classPaidData = {};
+    classes.forEach(c => {
+        const classStudents = students.filter(s => s.class === c);
+        classPaidData[c] = classStudents.reduce((s,st) => s + (Number(st.paid)||0), 0);
+    });
+
+    if (charts.chartClass) charts.chartClass.destroy();
+    charts.chartClass = new Chart(ctxClass, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(classPaidData),
+            datasets: [{
+                label: 'Montant payé (FC)',
+                data: Object.values(classPaidData),
+                backgroundColor: 'linear-gradient(135deg, #10b981, #059669)',
+                borderColor: '#10b981',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { labels: { color: '#fff' } } },
+            scales: { y: { ticks: { color: '#fff' }, grid: { color: '#fff10' } }, x: { ticks: { color: '#fff' } } }
         }
     });
 }
 
-// =============== EXPORTS EXTENSIONS ===============
+// =============== UTILITAIRES ===============
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.text("School Payment Manager - Liste Generale des Eleves", 14, 15);
-    let y = 25;
-    students.forEach((s, idx) => {
-        if (y > 280) { doc.addPage(); y = 20; }
-        doc.text(`${idx+1}. ID: ${s.id} | Nom: ${s.name} | Classe: ${s.class} | Paye: ${s.paid} FC`, 14, y);
-        y += 8;
+    doc.text("Liste des Élèves", 10, 10);
+    let y = 20;
+    students.forEach(s => {
+        doc.text(`${s.name} (${s.id}) - ${s.class}: ${s.paid}/${s.total} FC`, 10, y);
+        y += 7;
     });
-    doc.save('Rapport_Eleves_SchoolPayment.pdf');
+    doc.save("students.pdf");
 }
 
 function exportExcel() {
-    const ws = XLSX.utils.json_to_sheet(students.map(s => ({
-        ID: s.id, Nom: s.name, Classe: s.class, Genre: s.sex, Total: s.total, Paye: s.paid, Reste: (s.total-s.paid), Telephone: s.phone
-    })));
+    const ws = XLSX.utils.json_to_sheet(students);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Élèves");
-    XLSX.writeFile(wb, "Rapport_Finances_School.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Eleves");
+    XLSX.writeFile(wb, "students.xlsx");
 }
-
-function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
 </script>
+
 </body>
 </html>
