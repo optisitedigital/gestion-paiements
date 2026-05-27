@@ -1,70 +1,859 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Payment Manager | RDC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.16.4/framer-motion.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Payment Manager - RDC</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// ⚠️ REMPLACE CES VALEURS PAR TA CONFIG FIREBASE
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+window.db = db;
+window.auth = auth;
+window.firebaseFunctions = { collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc, signInWithEmailAndPassword, onAuthStateChanged, signOut };
+window.firebaseReady = true;
+document.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+* { font-family: 'Inter', sans-serif; }
+body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%); min-height: 100vh; overflow-x: hidden; }
+.glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); }
+.glass-dark { background: rgba(10,14,39,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+.gradient-text { background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gradient-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s; }
+.gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(16,185,129,0.4); }
+.gradient-btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); transition: all 0.3s; }
+.gradient-btn-blue:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(59,130,246,0.4); }
+.card-hover { transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.card-hover:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
+.fade-in { animation: fadeIn 0.6s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.slide-in { animation: slideIn 0.5s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+.float { animation: float 6s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+.pulse-ring { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.7); } 70% { box-shadow: 0 0 0 20px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+.spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; animation: blob 15s infinite; }
+@keyframes blob { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(100px,-50px) scale(1.1); } 66% { transform: translate(-50px,50px) scale(0.9); } }
+.input-modern { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+.input-modern:focus { background: rgba(255,255,255,0.1); border-color: #10b981; outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.2); }
+.sidebar-item { transition: all 0.3s; }
+.sidebar-item:hover, .sidebar-item.active { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(59,130,246,0.2)); border-left: 4px solid #10b981; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 10px; }
+.table-modern tbody tr { transition: all 0.3s; }
+.table-modern tbody tr:hover { background: rgba(16,185,129,0.1); transform: scale(1.01); }
+.badge-paid { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.badge-partial { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+.badge-unpaid { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.modal { animation: modalIn 0.3s ease-out; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+.stat-number { font-variant-numeric: tabular-nums; }
+</style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="text-white">
 
-    <header class="flex justify-between items-center mb-12">
-        <div>
-            <h1 class="text-3xl font-extrabold text-white">School<span class="text-green-500">Payment</span></h1>
-            <p class="text-slate-400">Smart tracking system for DRC schools</p>
-        </div>
-        <button onclick="alert('Accès réservé à l\'administration')" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full font-semibold transition">Connexion Admin</button>
-    </header>
+<!-- Background blobs -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="blob bg-green-500 w-96 h-96 top-0 -left-20"></div>
+    <div class="blob bg-blue-500 w-96 h-96 top-1/2 -right-20" style="animation-delay: 5s;"></div>
+    <div class="blob bg-indigo-500 w-96 h-96 bottom-0 left-1/3" style="animation-delay: 10s;"></div>
+</div>
 
-    <main class="max-w-2xl mx-auto">
-        <div class="glass p-8 rounded-3xl shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6 text-center">Rechercher un élève</h2>
-            <div class="flex gap-2">
-                <input type="text" id="studentId" placeholder="Entrer l'ID (ex: E001)" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl focus:ring-2 focus:ring-green-500 outline-none">
-                <button onclick="searchStudent()" class="bg-green-600 hover:bg-green-500 px-8 rounded-xl font-bold transition">Chercher</button>
+<!-- ============ PAGE D'ACCUEIL ============ -->
+<div id="homePage" class="relative z-10 min-h-screen">
+    <!-- Navbar -->
+    <nav class="glass-dark sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl gradient-btn flex items-center justify-center pulse-ring">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">School Payment</h1>
+                    <p class="text-xs text-gray-400">Manager RDC</p>
+                </div>
             </div>
-            
-            <div id="result" class="mt-8 transition-all duration-500"></div>
+            <button onclick="showLoginModal()" class="gradient-btn-blue px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+                <i class="fas fa-lock"></i>
+                <span class="hidden sm:inline">Administration</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="px-6 py-16 max-w-7xl mx-auto">
+        <div class="text-center fade-in">
+            <div class="inline-block float mb-6">
+                <div class="w-24 h-24 rounded-2xl gradient-btn flex items-center justify-center mx-auto shadow-2xl">
+                    <i class="fas fa-school text-5xl"></i>
+                </div>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black mb-6">
+                <span class="gradient-text">School Payment</span><br>
+                <span class="text-white">Manager</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-4">Smart student payment tracking system for schools</p>
+            <p class="text-md text-gray-400 mb-12">Solution moderne adaptée aux écoles de la RDC 🇨🇩</p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <button onclick="showSearchById()" class="gradient-btn px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                    <i class="fas fa-id-card"></i> Recherche par ID
+                </button>
+                <button onclick="showSearchByClass()" class="gradient-btn-blue px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                    <i class="fas fa-users"></i> Recherche par Classe
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-user-graduate text-3xl text-green-400"></i>
+                    <span class="text-xs text-gray-400">TOTAL</span>
+                </div>
+                <div class="stat-number text-3xl font-black" id="statStudents">0</div>
+                <p class="text-sm text-gray-400 mt-1">Élèves enregistrés</p>
+            </div>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-money-bill-wave text-3xl text-blue-400"></i>
+                    <span class="text-xs text-gray-400">FC</span>
+                </div>
+                <div class="stat-number text-3xl font-black" id="statPaid">0</div>
+                <p class="text-sm text-gray-400 mt-1">Montant total payé</p>
+            </div>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+                    <span class="text-xs text-gray-400">RETARD</span>
+                </div>
+                <div class="stat-number text-3xl font-black" id="statLate">0</div>
+                <p class="text-sm text-gray-400 mt-1">Élèves en retard</p>
+            </div>
+            <div class="glass rounded-2xl p-6 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-chalkboard text-3xl text-indigo-400"></i>
+                    <span class="text-xs text-gray-400">CLASSES</span>
+                </div>
+                <div class="stat-number text-3xl font-black" id="statClasses">0</div>
+                <p class="text-sm text-gray-400 mt-1">Classes enregistrées</p>
+            </div>
+        </div>
+
+        <!-- Section recherche par ID -->
+        <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i class="fas fa-id-card text-green-400"></i> Recherche par ID
+                </h2>
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input id="searchIdInput" type="text" placeholder="Entrer l'ID de l'élève..." class="input-modern flex-1 px-6 py-4 rounded-xl text-white placeholder-gray-400">
+                <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+            <div id="searchResultById" class="mt-8"></div>
+        </div>
+
+        <!-- Section recherche par classe -->
+        <div id="searchByClassSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i class="fas fa-users text-blue-400"></i> Recherche par Classe
+                </h2>
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <select id="classSelect" onchange="searchByClass()" class="input-modern px-6 py-4 rounded-xl text-white">
+                    <option value="">-- Sélectionner une classe --</option>
+                </select>
+                <input id="amountFilter" type="number" placeholder="Filtrer par montant payé..." oninput="filterByAmount()" class="input-modern px-6 py-4 rounded-xl text-white placeholder-gray-400">
+            </div>
+            <div id="searchResultByClass"></div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ MODAL LOGIN ============ -->
+<div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+    <div class="glass-dark rounded-3xl p-8 max-w-md w-full modal">
+        <div class="text-center mb-6">
+            <div class="w-20 h-20 rounded-2xl gradient-btn-blue flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shield-alt text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold">Administration</h2>
+            <p class="text-gray-400 text-sm">Connectez-vous pour continuer</p>
+        </div>
+        <form onsubmit="adminLogin(event)" class="space-y-4">
+            <input id="loginEmail" type="email" placeholder="Email administrateur" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
+            <input id="loginPassword" type="password" placeholder="Mot de passe" required class="input-modern w-full px-4 py-3 rounded-xl text-white placeholder-gray-400">
+            <div id="loginError" class="hidden text-red-400 text-sm text-center"></div>
+            <button type="submit" class="gradient-btn w-full py-3 rounded-xl font-bold">Se connecter</button>
+            <button type="button" onclick="hideLoginModal()" class="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white">Annuler</button>
+        </form>
+        <p class="text-xs text-gray-500 text-center mt-4">Demo: admin@school.cd / admin123</p>
+    </div>
+</div>
+
+<!-- ============ DASHBOARD ADMIN ============ -->
+<div id="adminDashboard" class="hidden relative z-10 min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 glass-dark fixed h-screen overflow-y-auto hidden lg:block">
+        <div class="p-6 border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-sm">Admin Panel</h2>
+                    <p class="text-xs text-gray-400">School Manager</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4 space-y-2">
+            <a onclick="showAdminSection('dashboard')" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a onclick="showAdminSection('students')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-users"></i> Élèves</a>
+            <a onclick="showAdminSection('payments')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-money-bill"></i> Paiements</a>
+            <a onclick="showAdminSection('classes')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chalkboard"></i> Classes</a>
+            <a onclick="showAdminSection('reports')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-file-export"></i> Rapports</a>
+            <button onclick="adminLogout()" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 mt-8"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 lg:ml-64 p-6">
+        <!-- Header mobile -->
+        <div class="lg:hidden flex items-center justify-between mb-6">
+            <h1 class="text-xl font-bold gradient-text">Admin Panel</h1>
+            <button onclick="adminLogout()" class="text-red-400"><i class="fas fa-sign-out-alt text-xl"></i></button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="adminSection_dashboard" class="admin-section">
+            <h2 class="text-3xl font-bold mb-6">Tableau de bord</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
+                    <div class="text-2xl font-bold" id="dashStudents">0</div>
+                    <p class="text-xs text-gray-400">Élèves</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-money-bill text-2xl text-blue-400 mb-2"></i>
+                    <div class="text-2xl font-bold" id="dashPaid">0 FC</div>
+                    <p class="text-xs text-gray-400">Total payé</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-clock text-2xl text-yellow-400 mb-2"></i>
+                    <div class="text-2xl font-bold" id="dashRemaining">0 FC</div>
+                    <p class="text-xs text-gray-400">Reste à payer</p>
+                </div>
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <i class="fas fa-chalkboard text-2xl text-indigo-400 mb-2"></i>
+                    <div class="text-2xl font-bold" id="dashClasses">0</div>
+                    <p class="text-xs text-gray-400">Classes</p>
+                </div>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold mb-4">Statut des paiements</h3>
+                    <canvas id="chartStatus"></canvas>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="font-bold mb-4">Paiements par classe</h3>
+                    <canvas id="chartClass"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ELEVES -->
+        <div id="adminSection_students" class="admin-section hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 class="text-3xl font-bold">Gestion des élèves</h2>
+                <button onclick="showStudentModal()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter élève</button>
+            </div>
+            <div class="glass rounded-2xl p-4 mb-4">
+                <input id="searchStudentAdmin" oninput="renderStudentsTable()" type="text" placeholder="🔍 Rechercher un élève..." class="input-modern w-full px-4 py-3 rounded-xl text-white">
+            </div>
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="table-modern w-full">
+                        <thead class="bg-white/5">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Nom</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Sexe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Payé</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAIEMENTS -->
+        <div id="adminSection_payments" class="admin-section hidden">
+            <h2 class="text-3xl font-bold mb-6">Historique des paiements</h2>
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="table-modern w-full">
+                        <thead class="bg-white/5">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Élève</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Montant payé</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
+                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLASSES -->
+        <div id="adminSection_classes" class="admin-section hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Classes</h2>
+                <button onclick="addClass()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter classe</button>
+            </div>
+            <div id="classesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- RAPPORTS -->
+        <div id="adminSection_reports" class="admin-section hidden">
+            <h2 class="text-3xl font-bold mb-6">Exports & Rapports</h2>
+            <div class="grid sm:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf text-6xl text-red-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Exporter PDF</h3>
+                    <p class="text-gray-400 text-sm">Télécharger la liste des élèves au format PDF</p>
+                </div>
+                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportExcel()">
+                    <i class="fas fa-file-excel text-6xl text-green-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Exporter Excel</h3>
+                    <p class="text-gray-400 text-sm">Télécharger les données au format Excel</p>
+                </div>
+            </div>
         </div>
     </main>
+</div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyFY7juaeqAw6ROSROdFRyGpWrz2XBqRu7-03HgkkDH-QnYIZEYfIB86tRhxNOeIt2P/exec";
+<!-- ============ MODAL ELEVE ============ -->
+<div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
+    <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8">
+        <h2 id="studentModalTitle" class="text-2xl font-bold mb-6">Ajouter un élève</h2>
+        <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4">
+            <input id="stuId" type="text" placeholder="ID unique" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuName" type="text" placeholder="Nom complet" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuPhoto" type="url" placeholder="URL photo (optionnel)" class="input-modern px-4 py-3 rounded-xl">
+            <select id="stuClass" required class="input-modern px-4 py-3 rounded-xl"></select>
+            <select id="stuSex" required class="input-modern px-4 py-3 rounded-xl">
+                <option value="">Sexe</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+            </select>
+            <input id="stuPhone" type="tel" placeholder="Téléphone parent" class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuTotal" type="number" placeholder="Montant total à payer" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuYear" type="text" placeholder="Année scolaire (ex: 2024-2025)" required class="input-modern px-4 py-3 rounded-xl">
+            <input id="stuDate" type="date" class="input-modern px-4 py-3 rounded-xl">
+            <div class="md:col-span-2 flex gap-3 mt-4">
+                <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold">Enregistrer</button>
+                <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        async function searchStudent() {
-            const id = document.getElementById('studentId').value;
-            const resDiv = document.getElementById('result');
-            
-            resDiv.innerHTML = "<p class='text-center text-slate-400'>Recherche en cours...</p>";
+<!-- LOADING -->
+<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div class="spinner"></div></div>
 
-            try {
-                const response = await fetch(`${API_URL}?id=${id}`);
-                const data = await response.json();
+<script>
+// =============== DATA MANAGEMENT ===============
+// Mode démo avec localStorage si Firebase n'est pas configuré
+let USE_FIREBASE = false;
+let students = [];
+let classes = [];
+let editingStudentId = null;
 
-                if (data.nom) {
-                    resDiv.innerHTML = `
-                        <div class="glass p-6 rounded-2xl border-l-4 border-green-500 animate-in fade-in zoom-in duration-300">
-                            <h3 class="text-xl font-bold">${data.nom}</h3>
-                            <p class="text-slate-300">Classe : ${data.classe}</p>
-                            <div class="mt-4 flex justify-between items-center">
-                                <span class="text-sm">Payé : <b class="text-green-400">${data.paye} $</b></span>
-                                <span class="text-sm">Reste : <b class="text-red-400">${data.total - data.paye} $</b></span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    resDiv.innerHTML = "<p class='text-center text-red-400'>Élève introuvable.</p>";
-                }
-            } catch (error) {
-                resDiv.innerHTML = "<p class='text-center text-red-400'>Erreur de connexion au serveur.</p>";
-            }
+const DEMO_STUDENTS = [
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500, paid: 500, year: '2024-2025', date: '2024-10-15' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300, paid: 200, year: '2024-2025', date: '2024-10-10' },
+    { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500, paid: 0, year: '2024-2025', date: '' },
+    { id: 'STU004', name: 'Ngoyi Esther', photo: 'https://i.pravatar.cc/150?img=49', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600, paid: 600, year: '2024-2025', date: '2024-10-20' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350, paid: 200, year: '2024-2025', date: '2024-10-05' }
+];
+
+const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A'];
+
+// Initialisation
+document.addEventListener('firebaseReady', () => { 
+    try { USE_FIREBASE = true; loadData(); } catch(e) { initDemo(); }
+});
+setTimeout(() => { if (!USE_FIREBASE) initDemo(); }, 2000);
+
+function initDemo() {
+    const saved = localStorage.getItem('spm_students');
+    const savedClasses = localStorage.getItem('spm_classes');
+    students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
+    classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
+    saveLocal();
+    updateStats();
+    populateClassSelect();
+}
+
+function saveLocal() {
+    localStorage.setItem('spm_students', JSON.stringify(students));
+    localStorage.setItem('spm_classes', JSON.stringify(classes));
+}
+
+async function loadData() {
+    showLoading();
+    try {
+        if (USE_FIREBASE && window.db) {
+            const { collection, getDocs } = window.firebaseFunctions;
+            const snap = await getDocs(collection(window.db, 'students'));
+            students = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+            const csnap = await getDocs(collection(window.db, 'classes'));
+            classes = csnap.docs.map(d => d.data().name);
+            if (classes.length === 0) classes = DEMO_CLASSES;
         }
-    </script>
+    } catch(e) { console.error(e); initDemo(); return; }
+    hideLoading();
+    updateStats();
+    populateClassSelect();
+}
+
+function updateStats() {
+    const total = students.length;
+    const totalPaid = students.reduce((s, st) => s + (st.paid || 0), 0);
+    const late = students.filter(s => (s.paid || 0) < (s.total || 0)).length;
+    animateNumber('statStudents', total);
+    animateNumber('statPaid', totalPaid);
+    animateNumber('statLate', late);
+    animateNumber('statClasses', classes.length);
+    if (document.getElementById('dashStudents')) {
+        document.getElementById('dashStudents').textContent = total;
+        document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
+        document.getElementById('dashRemaining').textContent = students.reduce((s,st) => s + ((st.total||0)-(st.paid||0)), 0).toLocaleString() + ' FC';
+        document.getElementById('dashClasses').textContent = classes.length;
+    }
+}
+
+function animateNumber(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 50));
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = current.toLocaleString();
+    }, 30);
+}
+
+function populateClassSelect() {
+    const sel = document.getElementById('classSelect');
+    const stuClassSel = document.getElementById('stuClass');
+    if (sel) {
+        sel.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    if (stuClassSel) {
+        stuClassSel.innerHTML = '<option value="">Choisir une classe</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+}
+
+// =============== RECHERCHE ===============
+function showSearchById() { hideSections(); document.getElementById('searchByIdSection').classList.remove('hidden'); document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'}); }
+function showSearchByClass() { hideSections(); document.getElementById('searchByClassSection').classList.remove('hidden'); document.getElementById('searchByClassSection').scrollIntoView({behavior:'smooth'}); }
+function hideSections() {
+    document.getElementById('searchByIdSection').classList.add('hidden');
+    document.getElementById('searchByClassSection').classList.add('hidden');
+}
+
+function searchById() {
+    const id = document.getElementById('searchIdInput').value.trim();
+    const result = document.getElementById('searchResultById');
+    if (!id) return;
+    const student = students.find(s => s.id.toLowerCase() === id.toLowerCase());
+    if (!student) {
+        result.innerHTML = `<div class="glass rounded-2xl p-8 text-center"><i class="fas fa-exclamation-circle text-5xl text-red-400 mb-4"></i><p class="text-xl">Aucun élève trouvé</p></div>`;
+        return;
+    }
+    result.innerHTML = renderStudentCard(student);
+}
+
+function renderStudentCard(s) {
+    const remaining = (s.total || 0) - (s.paid || 0);
+    let status = 'unpaid', statusText = 'Non payé', icon = 'times-circle';
+    if (s.paid >= s.total) { status = 'paid'; statusText = 'Payé'; icon = 'check-circle'; }
+    else if (s.paid > 0) { status = 'partial'; statusText = 'Incomplet'; icon = 'exclamation-circle'; }
+    const photo = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff&size=200`;
+    return `<div class="glass rounded-3xl p-8 slide-in">
+        <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-shrink-0 text-center">
+                <img src="${photo}" alt="${s.name}" class="w-32 h-32 rounded-2xl object-cover mx-auto border-4 border-green-400/30">
+                <span class="badge-${status} inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mt-3"><i class="fas fa-${icon}"></i> ${statusText}</span>
+            </div>
+            <div class="flex-1 grid sm:grid-cols-2 gap-4">
+                <div><p class="text-xs text-gray-400">Nom complet</p><p class="font-bold text-lg">${s.name}</p></div>
+                <div><p class="text-xs text-gray-400">ID</p><p class="font-bold text-lg">${s.id}</p></div>
+                <div><p class="text-xs text-gray-400">Classe</p><p class="font-bold">${s.class}</p></div>
+                <div><p class="text-xs text-gray-400">Sexe</p><p class="font-bold">${s.sex === 'M' ? 'Masculin' : 'Féminin'}</p></div>
+                <div><p class="text-xs text-gray-400">Montant payé</p><p class="font-bold text-green-400">${(s.paid||0).toLocaleString()} FC</p></div>
+                <div><p class="text-xs text-gray-400">Reste à payer</p><p class="font-bold text-red-400">${remaining.toLocaleString()} FC</p></div>
+                <div><p class="text-xs text-gray-400">Dernier paiement</p><p class="font-bold">${s.date || 'Aucun'}</p></div>
+                <div><p class="text-xs text-gray-400">Année scolaire</p><p class="font-bold">${s.year}</p></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function searchByClass() {
+    const cls = document.getElementById('classSelect').value;
+    const result = document.getElementById('searchResultByClass');
+    if (!cls) { result.innerHTML = ''; return; }
+    renderClassResults(students.filter(s => s.class === cls));
+}
+
+function filterByAmount() {
+    const cls = document.getElementById('classSelect').value;
+    const amount = parseFloat(document.getElementById('amountFilter').value);
+    if (!cls) return;
+    let list = students.filter(s => s.class === cls);
+    if (!isNaN(amount)) list = list.filter(s => s.paid === amount);
+    renderClassResults(list);
+}
+
+function renderClassResults(list) {
+    const result = document.getElementById('searchResultByClass');
+    if (list.length === 0) {
+        result.innerHTML = `<div class="glass rounded-2xl p-8 text-center"><i class="fas fa-inbox text-5xl text-gray-400 mb-3"></i><p>Aucun élève trouvé</p></div>`;
+        return;
+    }
+    result.innerHTML = `<div class="glass rounded-2xl overflow-hidden"><div class="overflow-x-auto"><table class="table-modern w-full">
+        <thead class="bg-white/5"><tr>
+            <th class="px-4 py-3 text-left text-xs uppercase">ID</th>
+            <th class="px-4 py-3 text-left text-xs uppercase">Nom</th>
+            <th class="px-4 py-3 text-left text-xs uppercase">Payé</th>
+            <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
+        </tr></thead>
+        <tbody>${list.map(s => {
+            let status = 'unpaid', statusText = 'Non payé';
+            if (s.paid >= s.total) { status = 'paid'; statusText = 'Payé'; }
+            else if (s.paid > 0) { status = 'partial'; statusText = 'Incomplet'; }
+            return `<tr class="border-t border-white/5">
+                <td class="px-4 py-3 font-mono">${s.id}</td>
+                <td class="px-4 py-3 font-bold">${s.name}</td>
+                <td class="px-4 py-3">${(s.paid||0).toLocaleString()} FC</td>
+                <td class="px-4 py-3"><span class="badge-${status} px-3 py-1 rounded-full text-xs font-bold">${statusText}</span></td>
+            </tr>`;
+        }).join('')}</tbody></table></div></div>`;
+}
+
+// =============== LOGIN ADMIN ===============
+function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+
+async function adminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    
+    // Mode démo
+    if (email === 'admin@school.cd' && pass === 'admin123') {
+        hideLoginModal();
+        showAdminDashboard();
+        return;
+    }
+    
+    if (USE_FIREBASE) {
+        try {
+            await window.firebaseFunctions.signInWithEmailAndPassword(window.auth, email, pass);
+            hideLoginModal();
+            showAdminDashboard();
+        } catch(err) {
+            errorEl.textContent = 'Identifiants incorrects';
+            errorEl.classList.remove('hidden');
+        }
+    } else {
+        errorEl.textContent = 'Identifiants incorrects';
+        errorEl.classList.remove('hidden');
+    }
+}
+
+function adminLogout() {
+    if (USE_FIREBASE && window.auth) { try { window.firebaseFunctions.signOut(window.auth); } catch(e){} }
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('homePage').classList.remove('hidden');
+}
+
+function showAdminDashboard() {
+    document.getElementById('homePage').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    showAdminSection('dashboard');
+}
+
+function showAdminSection(section) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('adminSection_' + section).classList.remove('hidden');
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    event && event.target && event.target.classList.add('active');
+    
+    if (section === 'dashboard') { updateStats(); setTimeout(drawCharts, 100); }
+    if (section === 'students') renderStudentsTable();
+    if (section === 'payments') renderPaymentsTable();
+    if (section === 'classes') renderClassesList();
+}
+
+// =============== GESTION ELEVES ===============
+function showStudentModal(id = null) {
+    editingStudentId = id;
+    populateClassSelect();
+    document.getElementById('studentModalTitle').textContent = id ? 'Modifier élève' : 'Ajouter élève';
+    if (id) {
+        const s = students.find(st => st.id === id);
+        if (s) {
+            document.getElementById('stuId').value = s.id;
+            document.getElementById('stuName').value = s.name;
+            document.getElementById('stuPhoto').value = s.photo || '';
+            document.getElementById('stuClass').value = s.class;
+            document.getElementById('stuSex').value = s.sex;
+            document.getElementById('stuPhone').value = s.phone || '';
+            document.getElementById('stuTotal').value = s.total;
+            document.getElementById('stuPaid').value = s.paid;
+            document.getElementById('stuYear').value = s.year;
+            document.getElementById('stuDate').value = s.date || '';
+        }
+    } else {
+        document.querySelectorAll('#studentModal input').forEach(i => i.value = '');
+        document.getElementById('stuPaid').value = '0';
+    }
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+function hideStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
+
+async function saveStudent(e) {
+    e.preventDefault();
+    const data = {
+        id: document.getElementById('stuId').value,
+        name: document.getElementById('stuName').value,
+        photo: document.getElementById('stuPhoto').value,
+        class: document.getElementById('stuClass').value,
+        sex: document.getElementById('stuSex').value,
+        phone: document.getElementById('stuPhone').value,
+        total: parseFloat(document.getElementById('stuTotal').value),
+        paid: parseFloat(document.getElementById('stuPaid').value),
+        year: document.getElementById('stuYear').value,
+        date: document.getElementById('stuDate').value
+    };
+    if (editingStudentId) {
+        const idx = students.findIndex(s => s.id === editingStudentId);
+        if (idx >= 0) students[idx] = { ...students[idx], ...data };
+    } else {
+        if (students.find(s => s.id === data.id)) { alert('Cet ID existe déjà'); return; }
+        students.push(data);
+    }
+    if (USE_FIREBASE && window.db) {
+        try { await window.firebaseFunctions.setDoc(window.firebaseFunctions.doc(window.db, 'students', data.id), data); } catch(e) { console.error(e); }
+    }
+    saveLocal();
+    updateStats();
+    renderStudentsTable();
+    hideStudentModal();
+}
+
+async function deleteStudent(id) {
+    if (!confirm('Supprimer cet élève ?')) return;
+    students = students.filter(s => s.id !== id);
+    if (USE_FIREBASE && window.db) {
+        try { await window.firebaseFunctions.deleteDoc(window.firebaseFunctions.doc(window.db, 'students', id)); } catch(e){}
+    }
+    saveLocal();
+    updateStats();
+    renderStudentsTable();
+}
+
+function renderStudentsTable() {
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    const search = (document.getElementById('searchStudentAdmin')?.value || '').toLowerCase();
+    const list = students.filter(s => !search || s.name.toLowerCase().includes(search) || s.id.toLowerCase().includes(search) || s.class.toLowerCase().includes(search));
+    tbody.innerHTML = list.map(s => {
+        const remaining = (s.total||0) - (s.paid||0);
+        let status = 'unpaid', txt = 'Non payé';
+        if (s.paid >= s.total) { status = 'paid'; txt = 'Payé'; }
+        else if (s.paid > 0) { status = 'partial'; txt = 'Incomplet'; }
+        return `<tr class="border-t border-white/5">
+            <td class="px-4 py-3 font-mono text-xs">${s.id}</td>
+            <td class="px-4 py-3 font-bold">${s.name}</td>
+            <td class="px-4 py-3 text-sm">${s.class}</td>
+            <td class="px-4 py-3 text-sm">${s.sex}</td>
+            <td class="px-4 py-3 text-green-400 font-bold">${(s.paid||0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-red-400">${remaining.toLocaleString()}</td>
+            <td class="px-4 py-3"><span class="badge-${status} px-2 py-1 rounded-full text-xs">${txt}</span></td>
+            <td class="px-4 py-3"><div class="flex gap-2">
+                <button onclick="showStudentModal('${s.id}')" class="text-blue-400 hover:text-blue-300"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderPaymentsTable() {
+    const tbody = document.getElementById('paymentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = students.filter(s => s.paid > 0).map(s => {
+        const remaining = (s.total||0) - (s.paid||0);
+        let status = 'unpaid', txt = 'Non payé';
+        if (s.paid >= s.total) { status = 'paid'; txt = 'Payé'; }
+        else if (s.paid > 0) { status = 'partial'; txt = 'Incomplet'; }
+        return `<tr class="border-t border-white/5">
+            <td class="px-4 py-3 text-sm">${s.date || '-'}</td>
+            <td class="px-4 py-3 font-bold">${s.name}</td>
+            <td class="px-4 py-3 text-sm">${s.class}</td>
+            <td class="px-4 py-3 text-green-400 font-bold">${(s.paid||0).toLocaleString()} FC</td>
+            <td class="px-4 py-3 text-red-400">${remaining.toLocaleString()} FC</td>
+            <td class="px-4 py-3"><span class="badge-${status} px-2 py-1 rounded-full text-xs">${txt}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderClassesList() {
+    const container = document.getElementById('classesList');
+    container.innerHTML = classes.map(c => {
+        const count = students.filter(s => s.class === c).length;
+        return `<div class="glass rounded-2xl p-6 card-hover">
+            <div class="flex justify-between items-start mb-3">
+                <i class="fas fa-chalkboard text-3xl text-indigo-400"></i>
+                <button onclick="deleteClass('${c}')" class="text-red-400"><i class="fas fa-trash"></i></button>
+            </div>
+            <h3 class="font-bold text-lg">${c}</h3>
+            <p class="text-sm text-gray-400">${count} élève(s)</p>
+        </div>`;
+    }).join('');
+}
+
+function addClass() {
+    const name = prompt('Nom de la nouvelle classe :');
+    if (!name || classes.includes(name)) return;
+    classes.push(name);
+    saveLocal();
+    populateClassSelect();
+    renderClassesList();
+    updateStats();
+}
+
+function deleteClass(name) {
+    if (!confirm('Supprimer cette classe ?')) return;
+    classes = classes.filter(c => c !== name);
+    saveLocal();
+    renderClassesList();
+    populateClassSelect();
+    updateStats();
+}
+
+// =============== GRAPHIQUES ===============
+let chartStatus = null, chartClass = null;
+function drawCharts() {
+    const ctx1 = document.getElementById('chartStatus');
+    if (!ctx1) return;
+    if (chartStatus) chartStatus.destroy();
+    const paid = students.filter(s => s.paid >= s.total).length;
+    const partial = students.filter(s => s.paid > 0 && s.paid < s.total).length;
+    const unpaid = students.filter(s => s.paid === 0).length;
+    chartStatus = new Chart(ctx1, {
+        type: 'doughnut',
+        data: { labels: ['Payé', 'Incomplet', 'Non payé'], datasets: [{ data: [paid, partial, unpaid], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }]},
+        options: { responsive: true, plugins: { legend: { labels: { color: 'white' }}}}
+    });
+    
+    const ctx2 = document.getElementById('chartClass');
+    if (chartClass) chartClass.destroy();
+    const classData = classes.map(c => students.filter(s => s.class === c).reduce((a,s) => a + (s.paid||0), 0));
+    chartClass = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: classes, datasets: [{ label: 'FC payés', data: classData, backgroundColor: 'rgba(16,185,129,0.7)' }]},
+        options: { responsive: true, plugins: { legend: { labels: { color: 'white' }}}, scales: { x: { ticks: { color: 'white' }}, y: { ticks: { color: 'white' }}}}
+    });
+}
+
+// =============== EXPORTS ===============
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Liste des élèves - School Payment Manager', 14, 20);
+    doc.setFontSize(10);
+    let y = 35;
+    doc.text('ID | Nom | Classe | Payé | Reste | Statut', 14, y);
+    y += 8;
+    students.forEach(s => {
+        const r = (s.total||0) - (s.paid||0);
+        let st = s.paid >= s.total ? 'Paye' : s.paid > 0 ? 'Incomplet' : 'Non paye';
+        doc.text(`${s.id} | ${s.name} | ${s.class} | ${s.paid} | ${r} | ${st}`, 14, y);
+        y += 7;
+        if (y > 280) { doc.addPage(); y = 20; }
+    });
+    doc.save('eleves.pdf');
+}
+
+function exportExcel() {
+    const data = students.map(s => ({
+        ID: s.id, Nom: s.name, Classe: s.class, Sexe: s.sex,
+        'Telephone parent': s.phone, 'Total': s.total, 'Paye': s.paid,
+        'Reste': (s.total||0)-(s.paid||0), 'Annee': s.year, 'Date': s.date
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Eleves');
+    XLSX.writeFile(wb, 'eleves.xlsx');
+}
+
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+// Init
+initDemo();
+</script>
 </body>
 </html>
