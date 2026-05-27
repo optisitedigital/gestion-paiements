@@ -3,71 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Scolaire</title>
+    <title>School Payment Manager | RDC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.16.4/framer-motion.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 15px; background-color: #f4f4f9; }
-        .box { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #28a745; color: white; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #eee; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
-<body>
+<body class="min-h-screen p-4 md:p-8">
 
-<div class="box">
-    <h3>Gestion des Frais - Bobokoli</h3>
-    <input type="text" id="idRecherche" placeholder="Rechercher par ID (ex: 1001)">
-    <button onclick="filtrerID()">Rechercher</button>
-    
-    <select id="classeSelect">
-        <option value="all">Toutes les classes</option>
-        <option value="6e Primaire">6e Primaire</option>
-        <option value="2e Primaire">2e Primaire</option>
-    </select>
-    <button onclick="filtrerClasse()">Filtrer par Classe</button>
-</div>
+    <header class="flex justify-between items-center mb-12">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white">School<span class="text-green-500">Payment</span></h1>
+            <p class="text-slate-400">Smart tracking system for DRC schools</p>
+        </div>
+        <button onclick="alert('Accès réservé à l\'administration')" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full font-semibold transition">Connexion Admin</button>
+    </header>
 
-<div class="box" id="resultatArea">Tableau en attente...</div>
+    <main class="max-w-2xl mx-auto">
+        <div class="glass p-8 rounded-3xl shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-center">Rechercher un élève</h2>
+            <div class="flex gap-2">
+                <input type="text" id="studentId" placeholder="Entrer l'ID (ex: E001)" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl focus:ring-2 focus:ring-green-500 outline-none">
+                <button onclick="searchStudent()" class="bg-green-600 hover:bg-green-500 px-8 rounded-xl font-bold transition">Chercher</button>
+            </div>
+            
+            <div id="result" class="mt-8 transition-all duration-500"></div>
+        </div>
+    </main>
 
-<script>
-    let eleves = [];
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyFY7juaeqAw6ROSROdFRyGpWrz2XBqRu7-03HgkkDH-QnYIZEYfIB86tRhxNOeIt2P/exec";
 
-    async function charger() {
-        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
-        const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-        
-        try {
-            const res = await fetch(proxy);
-            const data = await res.json();
-            const lignes = data.contents.split('\n').slice(1);
-            eleves = lignes.filter(l => l.trim() !== "").map(l => {
-                const c = l.split(',');
-                return { id: c[0], nom: c[1], classe: c[2], paye: c[4] };
-            });
-            document.getElementById('resultatArea').innerHTML = "Données chargées !";
-        } catch(e) { document.getElementById('resultatArea').innerHTML = "Erreur de chargement."; }
-    }
+        async function searchStudent() {
+            const id = document.getElementById('studentId').value;
+            const resDiv = document.getElementById('result');
+            
+            resDiv.innerHTML = "<p class='text-center text-slate-400'>Recherche en cours...</p>";
 
-    function afficher(liste) {
-        let html = '<table><tr><th>ID</th><th>Nom</th><th>Classe</th><th>Payé</th></tr>';
-        liste.forEach(e => { html += `<tr><td>${e.id}</td><td>${e.nom}</td><td>${e.classe}</td><td>${e.paye} $</td></tr>`; });
-        document.getElementById('resultatArea').innerHTML = html + '</table>';
-    }
+            try {
+                const response = await fetch(`${API_URL}?id=${id}`);
+                const data = await response.json();
 
-    function filtrerID() {
-        const id = document.getElementById('idRecherche').value;
-        afficher(eleves.filter(e => e.id == id));
-    }
-
-    function filtrerClasse() {
-        const classe = document.getElementById('classeSelect').value;
-        if(classe === 'all') afficher(eleves);
-        else afficher(eleves.filter(e => e.classe.trim() === classe));
-    }
-
-    charger();
-</script>
+                if (data.nom) {
+                    resDiv.innerHTML = `
+                        <div class="glass p-6 rounded-2xl border-l-4 border-green-500 animate-in fade-in zoom-in duration-300">
+                            <h3 class="text-xl font-bold">${data.nom}</h3>
+                            <p class="text-slate-300">Classe : ${data.classe}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-sm">Payé : <b class="text-green-400">${data.paye} $</b></span>
+                                <span class="text-sm">Reste : <b class="text-red-400">${data.total - data.paye} $</b></span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resDiv.innerHTML = "<p class='text-center text-red-400'>Élève introuvable.</p>";
+                }
+            } catch (error) {
+                resDiv.innerHTML = "<p class='text-center text-red-400'>Erreur de connexion au serveur.</p>";
+            }
+        }
+    </script>
 </body>
 </html>
