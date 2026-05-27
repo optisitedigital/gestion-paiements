@@ -11,32 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// ⚠️ REMPLACE CES VALEURS PAR TA CONFIG FIREBASE
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-window.db = db;
-window.auth = auth;
-window.firebaseFunctions = { collection, getDocs, addDoc, deleteDoc, updateDoc, doc, query, where, getDoc, setDoc, signInWithEmailAndPassword, onAuthStateChanged, signOut };
-window.firebaseReady = true;
-document.dispatchEvent(new Event('firebaseReady'));
-</script>
-
 <style>
 * { font-family: 'Inter', sans-serif; }
 body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%); min-height: 100vh; overflow-x: hidden; }
@@ -76,7 +50,6 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
 .modal { animation: modalIn 0.3s ease-out; }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 .stat-number { font-variant-numeric: tabular-nums; }
-.error-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; }
 </style>
 </head>
 <body class="text-white">
@@ -131,7 +104,7 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
             </div>
         </div>
 
-        <!-- SECTION RECHERCHE PAR ID - CONNECTÉE AU GOOGLE SHEET -->
+        <!-- SECTION RECHERCHE PAR ID - CONNECTÉE AU GOOGLE SHEET CSV -->
         <div id="searchByIdSection" class="hidden glass rounded-3xl p-8 mb-8 slide-in relative overflow-hidden">
             <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
@@ -200,221 +173,133 @@ body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%
     </div>
 </div>
 
-<!-- DASHBOARD ADMIN SÉCURISÉ -->
-<div id="adminDashboard" class="hidden relative z-10 min-h-screen flex">
-    <aside class="w-64 glass-dark fixed h-screen overflow-y-auto hidden lg:block">
-        <div class="p-6 border-b border-white/10">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <div>
-                    <h2 class="font-bold text-sm">Admin Panel</h2>
-                    <p class="text-xs text-gray-400">School Manager</p>
-                </div>
-            </div>
-        </div>
-        <nav class="p-4 space-y-2">
-            <a onclick="showAdminSection('dashboard')" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chart-line"></i> Dashboard</a>
-            <a onclick="showAdminSection('students')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-users"></i> Élèves</a>
-            <a onclick="showAdminSection('payments')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-money-bill"></i> Paiements</a>
-            <a onclick="showAdminSection('classes')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-chalkboard"></i> Classes</a>
-            <a onclick="showAdminSection('reports')" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"><i class="fas fa-file-export"></i> Rapports</a>
-            <button onclick="adminLogout()" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 mt-8"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
-        </nav>
-    </aside>
-
-    <main class="flex-1 lg:ml-64 p-6">
-        <div class="lg:hidden flex items-center justify-between mb-6">
-            <h1 class="text-xl font-bold gradient-text">Admin Panel</h1>
-            <button onclick="adminLogout()" class="text-red-400"><i class="fas fa-sign-out-alt text-xl"></i></button>
-        </div>
-
-        <!-- DASHBOARD ADMIN AVEC STATS CONFIDENTIELLES -->
-        <div id="adminSection_dashboard" class="admin-section">
-            <h2 class="text-3xl font-bold mb-6">Tableau de bord</h2>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="glass rounded-2xl p-5 card-hover">
-                    <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
-                    <div class="text-2xl font-bold stat-number" id="dashStudents">0</div>
-                    <p class="text-xs text-gray-400">Élèves</p>
-                </div>
-                <div class="glass rounded-2xl p-5 card-hover">
-                    <i class="fas fa-money-bill text-2xl text-blue-400 mb-2"></i>
-                    <div class="text-2xl font-bold stat-number" id="dashPaid">0 FC</div>
-                    <p class="text-xs text-gray-400">Total payé</p>
-                </div>
-                <div class="glass rounded-2xl p-5 card-hover">
-                    <i class="fas fa-clock text-2xl text-yellow-400 mb-2"></i>
-                    <div class="text-2xl font-bold stat-number" id="dashRemaining">0 FC</div>
-                    <p class="text-xs text-gray-400">Reste à payer</p>
-                </div>
-                <div class="glass rounded-2xl p-5 card-hover">
-                    <i class="fas fa-chalkboard text-2xl text-indigo-400 mb-2"></i>
-                    <div class="text-2xl font-bold stat-number" id="dashClasses">0</div>
-                    <p class="text-xs text-gray-400">Classes</p>
-                </div>
-            </div>
-            <div class="grid lg:grid-cols-2 gap-6">
-                <div class="glass rounded-2xl p-6">
-                    <h3 class="font-bold mb-4">Statut des paiements</h3>
-                    <canvas id="chartStatus"></canvas>
-                </div>
-                <div class="glass rounded-2xl p-6">
-                    <h3 class="font-bold mb-4">Paiements par classe</h3>
-                    <canvas id="chartClass"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- GESTION DES ÉLÈVES -->
-        <div id="adminSection_students" class="admin-section hidden">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h2 class="text-3xl font-bold">Gestion des élèves</h2>
-                <button onclick="showStudentModal()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter élève</button>
-            </div>
-            <div class="glass rounded-2xl p-4 mb-4">
-                <input id="searchStudentAdmin" oninput="renderStudentsTable()" type="text" placeholder="🔍 Rechercher un élève..." class="input-modern w-full px-4 py-3 rounded-xl text-white">
-            </div>
-            <div class="glass rounded-2xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="table-modern w-full">
-                        <thead class="bg-white/5">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs uppercase">ID</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Nom</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Sexe</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Payé</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- HISTORIQUE DES PAIEMENTS -->
-        <div id="adminSection_payments" class="admin-section hidden">
-            <h2 class="text-3xl font-bold mb-6">Historique des paiements</h2>
-            <div class="glass rounded-2xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="table-modern w-full">
-                        <thead class="bg-white/5">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Date</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Élève</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Classe</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Montant payé</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Reste</th>
-                                <th class="px-4 py-3 text-left text-xs uppercase">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody id="paymentsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- GESTION DES CLASSES -->
-        <div id="adminSection_classes" class="admin-section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold">Classes</h2>
-                <button onclick="addClass()" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus mr-2"></i>Ajouter classe</button>
-            </div>
-            <div id="classesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
-
-        <!-- EXPORTS & RAPPORTS -->
-        <div id="adminSection_reports" class="admin-section hidden">
-            <h2 class="text-3xl font-bold mb-6">Exports & Rapports</h2>
-            <div class="grid sm:grid-cols-2 gap-6">
-                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportPDF()">
-                    <i class="fas fa-file-pdf text-6xl text-red-400 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Exporter PDF</h3>
-                    <p class="text-gray-400 text-sm">Télécharger la liste des élèves au format PDF</p>
-                </div>
-                <div class="glass rounded-2xl p-8 text-center card-hover cursor-pointer" onclick="exportExcel()">
-                    <i class="fas fa-file-excel text-6xl text-green-400 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Exporter Excel</h3>
-                    <p class="text-gray-400 text-sm">Télécharger les données au format Excel</p>
-                </div>
-            </div>
-        </div>
-    </main>
-</div>
-
-<!-- MODAL AJOUT/MODIFICATION ÉLÈVE -->
-<div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto">
-    <div class="glass-dark rounded-3xl p-8 max-w-2xl w-full modal my-8">
-        <h2 id="studentModalTitle" class="text-2xl font-bold mb-6">Ajouter un élève</h2>
-        <form onsubmit="saveStudent(event)" class="grid md:grid-cols-2 gap-4">
-            <input id="stuId" type="text" placeholder="ID unique (Ex: STD-2026-001)" required class="input-modern px-4 py-3 rounded-xl font-mono text-white">
-            <input id="stuName" type="text" placeholder="Nom complet" required class="input-modern px-4 py-3 rounded-xl text-white">
-            <input id="stuPhoto" type="url" placeholder="URL photo (optionnel)" class="input-modern px-4 py-3 rounded-xl text-white">
-            <select id="stuClass" required class="input-modern px-4 py-3 rounded-xl text-white"></select>
-            <select id="stuSex" required class="input-modern px-4 py-3 rounded-xl text-white">
-                <option value="">Sexe</option>
-                <option value="M">Masculin</option>
-                <option value="F">Féminin</option>
-            </select>
-            <input id="stuPhone" type="tel" placeholder="Téléphone parent" class="input-modern px-4 py-3 rounded-xl text-white">
-            <input id="stuTotal" type="number" placeholder="Montant total à payer" required class="input-modern px-4 py-3 rounded-xl text-white">
-            <input id="stuPaid" type="number" placeholder="Montant déjà payé" value="0" required class="input-modern px-4 py-3 rounded-xl text-white">
-            <input id="stuYear" type="text" placeholder="Année scolaire (ex: 2025-2026)" required class="input-modern px-4 py-3 rounded-xl text-white">
-            <input id="stuDate" type="date" class="input-modern px-4 py-3 rounded-xl text-white">
-            <div class="md:col-span-2 flex gap-3 mt-4">
-                <button type="submit" class="gradient-btn flex-1 py-3 rounded-xl font-bold">Enregistrer</button>
-                <button type="button" onclick="hideStudentModal()" class="flex-1 py-3 rounded-xl font-bold bg-white/10">Annuler</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div class="spinner"></div></div>
 
 <script>
-// =============== CONFIGURATION GOOGLE SHEETS ===============
-const GOOGLE_SHEETS_ID = '1hkxX5NYa4gR1MpaePpoJLnV0LTAbs1XOhb8Ix5S-XFc';
-const SHEET_RANGE = 'Sheet1!A1:M1000'; // Ajuste selon tes colonnes
-const GOOGLE_SHEETS_API_KEY = 'AIzaSyDQDMlGHwwvYc3qyqt_k8vNX_QLJ0fR5wk'; // À remplacer par ta clé API
+// =============== CONFIGURATION CSV GOOGLE SHEETS ===============
+// URL CSV publique du Google Sheet
+const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
 
 // =============== DATA MANAGEMENT ===============
-let USE_FIREBASE = false;
 let students = [];
 let classes = [];
 let editingStudentId = null;
-let charts = {};
 let isAdminLoggedIn = false;
 
 // Jeu de données de démo
 const DEMO_STUDENTS = [
     { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
     { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-05' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-08-20' },
     { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
     { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-10-08' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-07-15' },
 ];
 
 const DEMO_CLASSES = ['1ère Primaire A', '2ème Primaire B', '4ème Primaire A', '1ère Humanité Commerciale', '4HSC A', '4HSC B', '6HSC A', '5e Commerciale'];
 
-// Initialisation
-document.addEventListener('firebaseReady', () => { 
-    try { USE_FIREBASE = true; loadData(); } catch(e) { initDemo(); }
+// Initialisation au démarrage
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
 });
-setTimeout(() => { if (!USE_FIREBASE) initDemo(); }, 2000);
 
-function initDemo() {
+async function initializeApp() {
     const saved = localStorage.getItem('spm_students');
     const savedClasses = localStorage.getItem('spm_classes');
-    students = saved ? JSON.parse(saved) : DEMO_STUDENTS;
-    classes = savedClasses ? JSON.parse(savedClasses) : DEMO_CLASSES;
+    
+    if (saved) students = JSON.parse(saved);
+    if (savedClasses) classes = JSON.parse(savedClasses);
+    
+    if (!saved || !savedClasses) {
+        // Charger depuis Google Sheets ou démo
+        await loadFromGoogleSheets();
+    }
+    
+    if (students.length === 0) students = DEMO_STUDENTS;
+    if (classes.length === 0) classes = DEMO_CLASSES;
+    
     saveLocal();
     populateClassSelect();
+}
+
+// =============== CHARGER DEPUIS GOOGLE SHEETS CSV ===============
+async function loadFromGoogleSheets() {
+    try {
+        console.log('📥 Téléchargement du Google Sheet CSV...');
+        const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+        if (!response.ok) throw new Error('Erreur fetch CSV');
+        
+        const csvText = await response.text();
+        const result = convertCSVToStudents(csvText);
+        
+        if (result && result.length > 0) {
+            students = result;
+            // Extraire les classes uniques
+            const uniqueClasses = [...new Set(students.map(s => s.class).filter(c => c))];
+            if (uniqueClasses.length > 0) {
+                classes = uniqueClasses;
+            }
+            console.log(`✅ ${students.length} élèves chargés depuis Google Sheets`);
+            saveLocal();
+            return true;
+        }
+    } catch(error) {
+        console.error('❌ Erreur Google Sheets:', error);
+    }
+    return false;
+}
+
+// =============== PARSER CSV EN JSON ===============
+function convertCSVToStudents(csvText) {
+    try {
+        const lines = csvText.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return null;
+        
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        
+        // Trouver les colonnes
+        const idIndex = headers.findIndex(h => h.includes('id') || h.includes('identifiant'));
+        const nameIndex = headers.findIndex(h => h.includes('nom') || h.includes('name'));
+        const classIndex = headers.findIndex(h => h.includes('classe') || h.includes('class'));
+        const paidIndex = headers.findIndex(h => h.includes('payé') || h.includes('paid'));
+        const totalIndex = headers.findIndex(h => h.includes('total'));
+        const photoIndex = headers.findIndex(h => h.includes('photo') || h.includes('image'));
+        const sexIndex = headers.findIndex(h => h.includes('sexe') || h.includes('sex') || h.includes('gender'));
+        const phoneIndex = headers.findIndex(h => h.includes('téléphone') || h.includes('phone'));
+        const yearIndex = headers.findIndex(h => h.includes('année') || h.includes('year'));
+        const dateIndex = headers.findIndex(h => h.includes('date'));
+        
+        if (idIndex === -1) {
+            console.error('❌ Colonne ID non trouvée dans le CSV');
+            return null;
+        }
+        
+        const sheetStudents = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cells = lines[i].split(',').map(c => c.trim());
+            const id = cells[idIndex];
+            
+            if (!id) continue; // Ignorer les lignes sans ID
+            
+            sheetStudents.push({
+                id: String(id),
+                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom') : 'Sans nom',
+                class: classIndex >= 0 ? String(cells[classIndex] || '') : '',
+                paid: paidIndex >= 0 ? Number(cells[paidIndex]) || 0 : 0,
+                total: totalIndex >= 0 ? Number(cells[totalIndex]) || 0 : 0,
+                photo: photoIndex >= 0 ? String(cells[photoIndex] || '') : '',
+                sex: sexIndex >= 0 ? String(cells[sexIndex] || '') : '',
+                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '') : '',
+                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026') : '2025-2026',
+                date: dateIndex >= 0 ? String(cells[dateIndex] || '') : ''
+            });
+        }
+        
+        return sheetStudents.length > 0 ? sheetStudents : null;
+    } catch(error) {
+        console.error('❌ Erreur parsing CSV:', error);
+        return null;
+    }
 }
 
 function saveLocal() {
@@ -422,76 +307,24 @@ function saveLocal() {
     localStorage.setItem('spm_classes', JSON.stringify(classes));
 }
 
-async function loadData() {
-    try {
-        if (USE_FIREBASE && window.db) {
-            const { collection, getDocs } = window.firebaseFunctions;
-            const snap = await getDocs(collection(window.db, 'students'));
-            students = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
-            const csnap = await getDocs(collection(window.db, 'classes'));
-            classes = csnap.docs.map(d => d.data().name);
-            if (classes.length === 0) classes = DEMO_CLASSES;
-        }
-    } catch(e) { console.error(e); initDemo(); return; }
-    populateClassSelect();
-}
-
-// =============== FETCH DEPUIS GOOGLE SHEETS ===============
-async function fetchFromGoogleSheets() {
-    try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/${SHEET_RANGE}?key=${GOOGLE_SHEETS_API_KEY}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Erreur Google Sheets');
-        const data = await response.json();
-        return data.values || [];
-    } catch(error) {
-        console.error('Erreur fetch Google Sheets:', error);
-        return null;
+function populateClassSelect() {
+    const select = document.getElementById('stuClass');
+    if (!select) {
+        setTimeout(populateClassSelect, 100);
+        return;
     }
+    const select2 = document.getElementById('classSelect');
+    const options = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (select) select.innerHTML = '<option value="">-- Sélectionner --</option>' + options;
+    if (select2) select2.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + options;
 }
 
-// Convertir les données du Google Sheet en format élève
-function convertGoogleSheetToStudents(rows) {
-    if (!rows || rows.length < 2) return null;
-    
-    const headers = rows[0].map(h => h.toLowerCase().trim());
-    const idIndex = headers.findIndex(h => h.includes('id'));
-    const nameIndex = headers.findIndex(h => h.includes('nom'));
-    const classIndex = headers.findIndex(h => h.includes('classe'));
-    const paidIndex = headers.findIndex(h => h.includes('payé') || h.includes('paid'));
-    const totalIndex = headers.findIndex(h => h.includes('total'));
-    const photoIndex = headers.findIndex(h => h.includes('photo'));
-    const sexIndex = headers.findIndex(h => h.includes('sexe') || h.includes('sex'));
-    const phoneIndex = headers.findIndex(h => h.includes('téléphone') || h.includes('phone'));
-    
-    const sheetStudents = [];
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (idIndex === -1 || !row[idIndex]) continue; // Skip si pas d'ID
-        
-        sheetStudents.push({
-            id: String(row[idIndex]).trim(),
-            name: nameIndex >= 0 ? String(row[nameIndex] || '').trim() : '',
-            class: classIndex >= 0 ? String(row[classIndex] || '').trim() : '',
-            paid: paidIndex >= 0 ? Number(row[paidIndex]) || 0 : 0,
-            total: totalIndex >= 0 ? Number(row[totalIndex]) || 0 : 0,
-            photo: photoIndex >= 0 ? String(row[photoIndex] || '').trim() : '',
-            sex: sexIndex >= 0 ? String(row[sexIndex] || '').trim() : '',
-            phone: phoneIndex >= 0 ? String(row[phoneIndex] || '').trim() : '',
-            year: '2025-2026',
-            date: new Date().toISOString().split('T')[0]
-        });
-    }
-    
-    return sheetStudents.length > 0 ? sheetStudents : null;
-}
-
-// =============== RECHERCHE PAR ID CORRIGÉE ===============
+// =============== RECHERCHE PAR ID ===============
 function showSearchById() { 
     hideSections(); 
     document.getElementById('searchByIdSection').classList.remove('hidden'); 
     document.getElementById('searchByIdSection').scrollIntoView({behavior:'smooth'});
-    document.getElementById('searchIdInput').focus();
+    setTimeout(() => document.getElementById('searchIdInput').focus(), 300);
 }
 
 function showSearchByClass() { 
@@ -520,25 +353,13 @@ async function searchById() {
     resultContainer.style.opacity = '0';
     loader.classList.remove('hidden');
 
-    // Tente d'abord le Google Sheets
-    let sheetData = await fetchFromGoogleSheets();
-    let sheetStudents = sheetData ? convertGoogleSheetToStudents(sheetData) : null;
-    
-    // Simule le délai réseau
+    // Simule un délai réseau
     await new Promise(resolve => setTimeout(resolve, 500));
     
     loader.classList.add('hidden');
 
-    // Cherche dans les données du Google Sheet d'abord, puis dans le local
-    let student = null;
-    
-    if (sheetStudents) {
-        student = sheetStudents.find(s => s.id.toUpperCase() === id);
-    }
-    
-    if (!student) {
-        student = students.find(s => s.id.trim().toUpperCase() === id);
-    }
+    // Chercher l'élève
+    let student = students.find(s => s.id.trim().toUpperCase() === id);
 
     if (!student) {
         resultContainer.innerHTML = `
@@ -563,6 +384,7 @@ function buildPremiumStudentCard(s) {
     const total = Number(s.total) || 0;
     const paid = Number(s.paid) || 0;
     const remaining = total - paid;
+    const percentagePaid = total > 0 ? Math.round((paid / total) * 100) : 0;
     
     let badgeClass = 'badge-unpaid', statusText = 'Non Payé', icon = 'times-circle';
     let statusSchool = s.year ? `Année : ${s.year}` : 'Statut Inconnu';
@@ -582,7 +404,7 @@ function buildPremiumStudentCard(s) {
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=3b82f6&color=fff&size=250&bold=true`;
 
     return `
-        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all duration-300">
+        <div class="glass bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all fade-in">
             <div class="absolute -right-10 -bottom-10 opacity-5 text-9xl pointer-events-none">
                 <i class="fas fa-graduation-cap"></i>
             </div>
@@ -624,7 +446,7 @@ function buildPremiumStudentCard(s) {
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Genre</p>
-                                <p class="text-sm font-medium text-gray-300">${s.sex === 'M' ? 'Masculin' : 'Féminin'}</p>
+                                <p class="text-sm font-medium text-gray-300">${s.sex === 'M' ? 'Masculin' : s.sex === 'F' ? 'Féminin' : s.sex}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Contact Parent</p>
@@ -633,24 +455,142 @@ function buildPremiumStudentCard(s) {
                         </div>
                     </div>
 
-                    <div class="border-t border-white/10 pt-4 mt-2 grid grid-cols-3 gap-2 text-center md:text-left">
-                        <div>
-                            <span class="text-[10px] text-gray-400 block uppercase">Frais Total</span>
-                            <span class="text-md font-extrabold text-white">${total.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-gray-400 uppercase font-bold">Progression du paiement</span>
+                                <span class="text-sm font-bold text-emerald-400">${percentagePaid}%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                                <div class="bg-gradient-to-r from-emerald-400 to-green-500 h-full transition-all" style="width: ${Math.min(percentagePaid, 100)}%"></div>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[10px] text-gray-400 block uppercase">Montant Payé</span>
-                            <span class="text-md font-extrabold text-emerald-400">${paid.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                        
+                        <div class="grid grid-cols-3 gap-2 text-center md:text-left">
+                            <div>
+                                <span class="text-[10px] text-gray-400 block uppercase">Frais Total</span>
+                                <span class="text-md font-extrabold text-white">${total.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-gray-400 block uppercase">Montant Payé</span>
+                                <span class="text-md font-extrabold text-emerald-400">${paid.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-gray-400 block uppercase">Reste Obligatoire</span>
+                                <span class="text-md font-extrabold ${remaining > 0 ? 'text-red-400' : 'text-gray-500'}">${remaining.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[10px] text-gray-400 block uppercase">Reste Obligatoire</span>
-                            <span class="text-md font-extrabold ${remaining > 0 ? 'text-red-400' : 'text-gray-500'}">${remaining.toLocaleString()} <span class="text-[10px] text-gray-400 font-normal">FC</span></span>
-                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-6 flex-wrap justify-center md:justify-start">
+                        <button onclick="printStudentCard('${s.id}')" class="gradient-btn px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                            <i class="fas fa-print"></i> Imprimer
+                        </button>
+                        <button onclick="downloadStudentPDF('${s.id}')" class="gradient-btn-blue px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     `;
+}
+
+// =============== BONUS: IMPRESSION & PDF ===============
+function printStudentCard(studentId) {
+    const student = students.find(s => s.id === studentId);
+    if (!student) return;
+    
+    const printWindow = window.open('', '_blank');
+    const total = Number(student.total) || 0;
+    const paid = Number(student.paid) || 0;
+    const remaining = total - paid;
+    const percentagePaid = total > 0 ? Math.round((paid / total) * 100) : 0;
+    
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Fiche Élève - ${student.name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                .card { max-width: 600px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; }
+                h1 { color: #10b981; text-align: center; font-size: 28px; margin-bottom: 10px; }
+                .info { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; background: #f9fafb; padding: 15px; border-radius: 8px; }
+                .info-item { }
+                .info-label { font-size: 12px; color: #6b7280; font-weight: bold; text-transform: uppercase; }
+                .info-value { font-size: 16px; font-weight: bold; color: #1f2937; margin-top: 5px; }
+                .finances { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0; }
+                .finance-box { background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #10b981; }
+                .finance-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: bold; }
+                .finance-value { font-size: 20px; font-weight: bold; color: #1f2937; margin-top: 5px; }
+                .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 15px; }
+                .progress-bar { width: 100%; height: 20px; background: #e5e7eb; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+                .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: ${percentagePaid}%; }
+                @media print { body { background: white; } }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>Fiche de Suivi Élève</h1>
+                <p style="text-align: center; color: #6b7280; margin-bottom: 30px;">School Payment Manager - RDC</p>
+                
+                <div class="info">
+                    <div class="info-item">
+                        <div class="info-label">Identifiant</div>
+                        <div class="info-value">${student.id}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Nom Complet</div>
+                        <div class="info-value">${student.name}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Classe</div>
+                        <div class="info-value">${student.class}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Année</div>
+                        <div class="info-value">${student.year}</div>
+                    </div>
+                </div>
+
+                <h2 style="font-size: 16px; color: #374151; margin: 20px 0 15px 0;">État des Finances</h2>
+                <div class="finances">
+                    <div class="finance-box">
+                        <div class="finance-label">Frais Total</div>
+                        <div class="finance-value">${total.toLocaleString()} FC</div>
+                    </div>
+                    <div class="finance-box" style="border-left-color: #059669;">
+                        <div class="finance-label">Montant Payé</div>
+                        <div class="finance-value" style="color: #059669;">${paid.toLocaleString()} FC</div>
+                    </div>
+                    <div class="finance-box" style="border-left-color: #ef4444;">
+                        <div class="finance-label">Reste</div>
+                        <div class="finance-value" style="color: #ef4444;">${remaining.toLocaleString()} FC</div>
+                    </div>
+                </div>
+
+                <h2 style="font-size: 16px; color: #374151; margin: 20px 0 10px 0;">Progression (${percentagePaid}%)</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+
+                <div class="footer">
+                    <p>Généré le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p>Pour toute question: contact@schoolpayment.cd</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 250);
+}
+
+function downloadStudentPDF(studentId) {
+    alert('Téléchargement PDF en cours... Cette fonctionnalité sera disponible prochainement.');
 }
 
 // =============== RECHERCHE ET FILTRE PAR CLASSE ===============
@@ -703,7 +643,7 @@ function renderClassResults() {
                         let st = 'unpaid', txt = 'Non payé';
                         if (paid >= total) { st = 'paid'; txt = 'Payé'; }
                         else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
-                        return `<tr class="border-t border-white/5">
+                        return `<tr class="border-t border-white/5 hover:bg-white/5 transition-all">
                             <td class="p-3 font-mono text-xs">${s.id}</td>
                             <td class="p-3 font-bold">${s.name}</td>
                             <td class="p-3 text-emerald-400">${paid.toLocaleString()} FC</td>
@@ -717,8 +657,14 @@ function renderClassResults() {
 }
 
 // =============== ADMINISTRATION SÉCURISÉE ===============
-function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
-function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginError').classList.add('hidden'); }
+function showLoginModal() { 
+    document.getElementById('loginModal').classList.remove('hidden'); 
+}
+
+function hideLoginModal() { 
+    document.getElementById('loginModal').classList.add('hidden'); 
+    document.getElementById('loginError').classList.add('hidden'); 
+}
 
 async function adminLogin(e) {
     e.preventDefault();
@@ -732,362 +678,22 @@ async function adminLogin(e) {
         return;
     }
 
-    if (USE_FIREBASE && window.auth) {
-        showLoading();
-        try {
-            const { signInWithEmailAndPassword } = window.firebaseFunctions;
-            await signInWithEmailAndPassword(window.auth, email, pass);
-            successLogin();
-        } catch(e) {
-            err.textContent = "Identifiants Firebase incorrects";
-            err.classList.remove('hidden');
-        }
-        hideLoading();
-    } else {
-        err.textContent = "Identifiants démo erronés";
-        err.classList.remove('hidden');
-    }
+    err.textContent = "Identifiants incorrects";
+    err.classList.remove('hidden');
 }
 
 function successLogin() {
     isAdminLoggedIn = true;
     hideLoginModal();
-    document.getElementById('homePage').classList.add('hidden');
-    document.getElementById('adminDashboard').classList.remove('hidden');
-    showAdminSection('dashboard');
-    updateAdminStats();
+    alert('✅ Connexion réussie! (Fonctionnalité admin à compléter)');
 }
 
-function adminLogout() {
-    isAdminLoggedIn = false;
-    if (USE_FIREBASE && window.auth) {
-        window.firebaseFunctions.signOut(window.auth);
-    }
-    document.getElementById('adminDashboard').classList.add('hidden');
-    document.getElementById('homePage').classList.remove('hidden');
+function showLoading() {
+    document.getElementById('loading').classList.remove('hidden');
 }
 
-function showAdminSection(sec) {
-    document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(`adminSection_${sec}`).classList.remove('hidden');
-    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-    
-    if (event?.currentTarget) event.currentTarget.classList.add('active');
-
-    if (sec === 'dashboard') renderCharts();
-    if (sec === 'students') renderStudentsTable();
-    if (sec === 'payments') renderPaymentsTable();
-    if (sec === 'classes') renderClassesManagement();
-}
-
-// =============== STATS ADMIN CONFIDENTIELLES ===============
-function updateAdminStats() {
-    if (!isAdminLoggedIn) return;
-    
-    const total = students.length;
-    const totalPaid = students.reduce((s, st) => s + (Number(st.paid) || 0), 0);
-    const remaining = students.reduce((s,st) => s + ((Number(st.total)||0)-(Number(st.paid)||0)), 0);
-    
-    if (document.getElementById('dashStudents')) {
-        document.getElementById('dashStudents').textContent = total;
-        document.getElementById('dashPaid').textContent = totalPaid.toLocaleString() + ' FC';
-        document.getElementById('dashRemaining').textContent = remaining.toLocaleString() + ' FC';
-        document.getElementById('dashClasses').textContent = classes.length;
-    }
-}
-
-// =============== TABLES ET COMPOSANTS ===============
-function renderStudentsTable() {
-    const q = document.getElementById('searchStudentAdmin').value.toLowerCase();
-    const tbody = document.getElementById('studentsTableBody');
-    const filtered = students.filter(s => s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q));
-
-    tbody.innerHTML = filtered.map(s => {
-        const total = Number(s.total) || 0;
-        const paid = Number(s.paid) || 0;
-        const rem = total - paid;
-        let st = 'unpaid', txt = 'Non payé';
-        if (paid >= total) { st = 'paid'; txt = 'Payé'; }
-        else if (paid > 0) { st = 'partial'; txt = 'Incomplet'; }
-
-        return `<tr class="border-b border-white/5">
-            <td class="px-4 py-3 font-mono text-xs">${s.id}</td>
-            <td class="px-4 py-3 font-semibold">${s.name}</td>
-            <td class="px-4 py-3 text-xs">${s.class}</td>
-            <td class="px-4 py-3 text-xs">${s.sex}</td>
-            <td class="px-4 py-3 text-xs text-emerald-400">${paid.toLocaleString()}</td>
-            <td class="px-4 py-3 text-xs text-red-400">${rem.toLocaleString()}</td>
-            <td class="px-4 py-3"><span class="badge-${st} px-2 py-0.5 rounded text-[10px]">${txt}</span></td>
-            <td class="px-4 py-3 text-xs">
-                <div class="flex gap-2">
-                    <button onclick="editStudent('${s.id}')" class="text-blue-400 hover:text-white"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:text-white"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        </tr>`;
-    }).join('');
-}
-
-function renderPaymentsTable() {
-    const tbody = document.getElementById('paymentsTableBody');
-    const logs = [];
-    students.forEach(s => {
-        if ((Number(s.paid) || 0) > 0) {
-            logs.push({
-                date: s.date || 'N/A',
-                name: s.name,
-                class: s.class,
-                paid: Number(s.paid) || 0,
-                total: Number(s.total) || 0
-            });
-        }
-    });
-
-    tbody.innerHTML = logs.map(l => {
-        const rem = l.total - l.paid;
-        let st = rem <= 0 ? 'paid' : 'partial', txt = rem <= 0 ? 'Soldé' : 'Avance';
-        return `<tr class="border-b border-white/5">
-            <td class="px-4 py-3 text-xs font-mono text-gray-400">${l.date}</td>
-            <td class="px-4 py-3 font-medium">${l.name}</td>
-            <td class="px-4 py-3 text-xs">${l.class}</td>
-            <td class="px-4 py-3 text-emerald-400 font-bold">${l.paid.toLocaleString()} FC</td>
-            <td class="px-4 py-3 text-xs text-gray-400">${rem.toLocaleString()} FC</td>
-            <td class="px-4 py-3"><span class="badge-${st} px-2 py-0.5 rounded text-[10px]">${txt}</span></td>
-        </tr>`;
-    }).join('');
-}
-
-function renderClassesManagement() {
-    const list = document.getElementById('classesList');
-    list.innerHTML = classes.map(c => {
-        const count = students.filter(s => s.class === c).length;
-        return `<div class="glass rounded-xl p-5 flex justify-between items-center card-hover">
-            <div>
-                <h3 class="font-bold text-lg">${c}</h3>
-                <p class="text-xs text-gray-400">${count} Élève(s) enregistré(s)</p>
-            </div>
-            <i class="fas fa-chalkboard text-2xl text-indigo-400/50"></i>
-        </div>`;
-    }).join('');
-}
-
-// =============== FORMULAIRES ===============
-function showStudentModal() {
-    editingStudentId = null;
-    document.getElementById('studentModalTitle').textContent = "Ajouter un élève";
-    document.getElementById('stuId').disabled = false;
-    document.getElementById('stuId').value = '';
-    document.getElementById('stuName').value = '';
-    document.getElementById('stuPhoto').value = '';
-    document.getElementById('stuSex').value = '';
-    document.getElementById('stuPhone').value = '';
-    document.getElementById('stuTotal').value = '';
-    document.getElementById('stuPaid').value = '0';
-    document.getElementById('stuYear').value = '2025-2026';
-    document.getElementById('stuDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('studentModal').classList.remove('hidden');
-}
-
-function hideStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
-
-function editStudent(id) {
-    const s = students.find(st => st.id === id);
-    if (!s) return;
-    editingStudentId = id;
-    document.getElementById('studentModalTitle').textContent = "Modifier l'élève";
-    document.getElementById('stuId').value = s.id;
-    document.getElementById('stuId').disabled = true;
-    document.getElementById('stuName').value = s.name;
-    document.getElementById('stuPhoto').value = s.photo || '';
-    document.getElementById('stuClass').value = s.class;
-    document.getElementById('stuSex').value = s.sex;
-    document.getElementById('stuPhone').value = s.phone || '';
-    document.getElementById('stuTotal').value = s.total;
-    document.getElementById('stuPaid').value = s.paid;
-    document.getElementById('stuYear').value = s.year || '2025-2026';
-    document.getElementById('stuDate').value = s.date || '';
-    document.getElementById('studentModal').classList.remove('hidden');
-}
-
-async function saveStudent(e) {
-    e.preventDefault();
-    showLoading();
-
-    const payload = {
-        id: document.getElementById('stuId').value.trim(),
-        name: document.getElementById('stuName').value.trim(),
-        photo: document.getElementById('stuPhoto').value.trim(),
-        class: document.getElementById('stuClass').value,
-        sex: document.getElementById('stuSex').value,
-        phone: document.getElementById('stuPhone').value.trim(),
-        total: Number(document.getElementById('stuTotal').value) || 0,
-        paid: Number(document.getElementById('stuPaid').value) || 0,
-        year: document.getElementById('stuYear').value.trim(),
-        date: document.getElementById('stuDate').value
-    };
-
-    if (editingStudentId) {
-        const idx = students.findIndex(st => st.id === editingStudentId);
-        if (idx !== -1) {
-            const target = students[idx];
-            students[idx] = { ...target, ...payload };
-            if (USE_FIREBASE && window.db && target._docId) {
-                try {
-                    const { updateDoc, doc } = window.firebaseFunctions;
-                    await updateDoc(doc(window.db, 'students', target._docId), payload);
-                } catch(e) { console.error(e); }
-            }
-        }
-    } else {
-        if (students.some(st => st.id.toLowerCase() === payload.id.toLowerCase())) {
-            alert("Cet ID unique existe déjà !");
-            hideLoading();
-            return;
-        }
-        if (USE_FIREBASE && window.db) {
-            try {
-                const { collection, addDoc } = window.firebaseFunctions;
-                const ref = await addDoc(collection(window.db, 'students'), payload);
-                payload._docId = ref.id;
-            } catch(e) { console.error(e); }
-        }
-        students.push(payload);
-    }
-
-    saveLocal();
-    updateAdminStats();
-    hideStudentModal();
-    renderStudentsTable();
-    hideLoading();
-}
-
-async function deleteStudent(id) {
-    if (!confirm("Voulez-vous vraiment supprimer cet élève ?")) return;
-    showLoading();
-    const idx = students.findIndex(s => s.id === id);
-    if (idx !== -1) {
-        const target = students[idx];
-        if (USE_FIREBASE && window.db && target._docId) {
-            try {
-                const { deleteDoc, doc } = window.firebaseFunctions;
-                await deleteDoc(doc(window.db, 'students', target._docId));
-            } catch(e) { console.error(e); }
-        }
-        students.splice(idx, 1);
-        saveLocal();
-        updateAdminStats();
-        renderStudentsTable();
-    }
-    hideLoading();
-}
-
-function addClass() {
-    const name = prompt("Entrez le nom de la nouvelle classe :");
-    if (!name || name.trim() === '') return;
-    if (classes.includes(name.trim())) { alert("Cette classe existe déjà."); return; }
-    
-    classes.push(name.trim());
-    if (USE_FIREBASE && window.db) {
-        try {
-            const { collection, addDoc } = window.firebaseFunctions;
-            addDoc(collection(window.db, 'classes'), { name: name.trim() });
-        } catch(e) { console.error(e); }
-    }
-    saveLocal();
-    updateAdminStats();
-    populateClassSelect();
-    renderClassesManagement();
-}
-
-function populateClassSelect() {
-    const sel = document.getElementById('classSelect');
-    const stuClassSel = document.getElementById('stuClass');
-    if (sel) {
-        sel.innerHTML = '<option value="">-- Sélectionner une classe --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-    if (stuClassSel) {
-        stuClassSel.innerHTML = '<option value="">Choisir une classe</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-}
-
-// =============== CHARTS ===============
-function renderCharts() {
-    const ctxStatus = document.getElementById('chartStatus')?.getContext('2d');
-    const ctxClass = document.getElementById('chartClass')?.getContext('2d');
-    if (!ctxStatus || !ctxClass) return;
-
-    const totalRegle = students.filter(s => (Number(s.paid)||0) >= (Number(s.total)||0)).length;
-    const totalAvance = students.filter(s => (Number(s.paid)||0) > 0 && (Number(s.paid)||0) < (Number(s.total)||0)).length;
-    const totalUnpaid = students.filter(s => (Number(s.paid)||0) === 0).length;
-
-    if (charts.chartStatus) charts.chartStatus.destroy();
-    charts.chartStatus = new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-            labels: ['Payé', 'Incomplet', 'Non Payé'],
-            datasets: [{
-                data: [totalRegle, totalAvance, totalUnpaid],
-                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                borderColor: '#0f1729',
-                borderWidth: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { labels: { color: '#fff' } } }
-        }
-    });
-
-    const classPaidData = {};
-    classes.forEach(c => {
-        const classStudents = students.filter(s => s.class === c);
-        classPaidData[c] = classStudents.reduce((s,st) => s + (Number(st.paid)||0), 0);
-    });
-
-    if (charts.chartClass) charts.chartClass.destroy();
-    charts.chartClass = new Chart(ctxClass, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(classPaidData),
-            datasets: [{
-                label: 'Montant payé (FC)',
-                data: Object.values(classPaidData),
-                backgroundColor: 'linear-gradient(135deg, #10b981, #059669)',
-                borderColor: '#10b981',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { labels: { color: '#fff' } } },
-            scales: { y: { ticks: { color: '#fff' }, grid: { color: '#fff10' } }, x: { ticks: { color: '#fff' } } }
-        }
-    });
-}
-
-// =============== UTILITAIRES ===============
-function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
-
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text("Liste des Élèves", 10, 10);
-    let y = 20;
-    students.forEach(s => {
-        doc.text(`${s.name} (${s.id}) - ${s.class}: ${s.paid}/${s.total} FC`, 10, y);
-        y += 7;
-    });
-    doc.save("students.pdf");
-}
-
-function exportExcel() {
-    const ws = XLSX.utils.json_to_sheet(students);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Eleves");
-    XLSX.writeFile(wb, "students.xlsx");
+function hideLoading() {
+    document.getElementById('loading').classList.add('hidden');
 }
 </script>
 
