@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Scolaire</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 15px; background-color: #f4f4f9; }
+        .box { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #eee; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>Gestion des Frais - Bobokoli</h3>
+    <input type="text" id="idRecherche" placeholder="Rechercher par ID (ex: 1001)">
+    <button onclick="filtrerID()">Rechercher</button>
+    
+    <select id="classeSelect">
+        <option value="all">Toutes les classes</option>
+        <option value="6e Primaire">6e Primaire</option>
+        <option value="2e Primaire">2e Primaire</option>
+    </select>
+    <button onclick="filtrerClasse()">Filtrer par Classe</button>
+</div>
+
+<div class="box" id="resultatArea">Tableau en attente...</div>
+
+<script>
+    let eleves = [];
+
+    async function charger() {
+        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
+        const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+        
+        try {
+            const res = await fetch(proxy);
+            const data = await res.json();
+            const lignes = data.contents.split('\n').slice(1);
+            eleves = lignes.filter(l => l.trim() !== "").map(l => {
+                const c = l.split(',');
+                return { id: c[0], nom: c[1], classe: c[2], paye: c[4] };
+            });
+            document.getElementById('resultatArea').innerHTML = "Données chargées !";
+        } catch(e) { document.getElementById('resultatArea').innerHTML = "Erreur de chargement."; }
+    }
+
+    function afficher(liste) {
+        let html = '<table><tr><th>ID</th><th>Nom</th><th>Classe</th><th>Payé</th></tr>';
+        liste.forEach(e => { html += `<tr><td>${e.id}</td><td>${e.nom}</td><td>${e.classe}</td><td>${e.paye} $</td></tr>`; });
+        document.getElementById('resultatArea').innerHTML = html + '</table>';
+    }
+
+    function filtrerID() {
+        const id = document.getElementById('idRecherche').value;
+        afficher(eleves.filter(e => e.id == id));
+    }
+
+    function filtrerClasse() {
+        const classe = document.getElementById('classeSelect').value;
+        if(classe === 'all') afficher(eleves);
+        else afficher(eleves.filter(e => e.classe.trim() === classe));
+    }
+
+    charger();
+</script>
+</body>
+</html>
