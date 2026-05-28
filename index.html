@@ -12,215 +12,788 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%); min-height: 100vh; overflow-x: hidden; }
-    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); }
-    .glass-dark { background: rgba(10,14,39,0.75); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .gradient-text { background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .gradient-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s; }
-    .gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(16,185,129,0.3); }
-    
-    .btn-mobile-money { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); transition: all 0.3s; }
-    .btn-mobile-money:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(245,158,11,0.3); }
+/* ════════════════════════════════════ */
+/* 🎨 VARIABLES & STYLES GLOBAUX */
+/* ════════════════════════════════════ */
+* { 
+    font-family: 'Inter', sans-serif; 
+    margin: 0;
+    padding: 0;
+}
 
-    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    .slide-in { animation: slideIn 0.4s ease-out forwards; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-    
-    .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: blob 20s infinite alternate; }
-    @keyframes blob { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(50px,-50px) scale(1.2); } }
-    
-    .input-modern { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
-    .input-modern:focus { background: rgba(255,255,255,0.08); border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
-    
-    .badge-paid { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-    .badge-partial { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-    .badge-unpaid { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-    
-    .spinner { border: 3px solid rgba(255,255,255,0.1); border-left-color: #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+:root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: #34d399;
+    --accent: #3b82f6;
+    --accent-dark: #1e40af;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+}
+
+body { 
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: white;
+}
+
+/* ════════════════════════════════════ */
+/* ✨ GLASSMORPHISM & BACKDROP BLUR */
+/* ════════════════════════════════════ */
+.glass {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.glass-dark {
+    background: rgba(10,14,39,0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.glass-premium {
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* ════════════════════════════════════ */
+/* 🎯 GRADIENT & TEXT EFFECTS */
+/* ════════════════════════════════════ */
+.gradient-text {
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+}
+
+.gradient-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 50px rgba(16,185,129,0.4);
+}
+
+.gradient-btn-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(59,130,246,0.3);
+}
+
+.gradient-btn-blue:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 50px rgba(59,130,246,0.4);
+}
+
+/* ════════════════════════════════════ */
+/* 🎭 CARD ANIMATIONS & HOVER EFFECTS */
+/* ════════════════════════════════════ */
+.card-hover {
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+.card-hover:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+}
+
+.card-elevated {
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.card-elevated:hover {
+    box-shadow: 0 30px 90px rgba(16,185,129,0.2);
+    transform: translateY(-4px);
+}
+
+/* ════════════════════════════════════ */
+/* 🎬 ANIMATIONS */
+/* ════════════════════════════════════ */
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-up {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-down {
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.pulse-ring {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16,185,129,0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 25px rgba(16,185,129,0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16,185,129,0);
+    }
+}
+
+.pulse-soft {
+    animation: pulseSoft 2s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.glow {
+    animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(16,185,129,0.5);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(16,185,129,0.8);
+    }
+}
+
+.bounce-in {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 4px solid rgba(255,255,255,0.1);
+    border-left-color: #10b981;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+.progress-bar-fill {
+    animation: progressFill 1.5s ease-out;
+}
+
+@keyframes progressFill {
+    from {
+        width: 0;
+    }
+    to {
+        width: var(--progress-width);
+    }
+}
+
+/* ════════════════════════════════════ */
+/* 🌀 BLOB ANIMATIONS */
+/* ════════════════════════════════════ */
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    animation: blob 15s infinite;
+}
+
+@keyframes blob {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(100px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-50px, 50px) scale(0.9);
+    }
+}
+
+/* ════════════════════════════════════ */
+/* 📝 INPUT STYLES */
+/* ════════════════════════════════════ */
+.input-modern {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.input-modern::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.input-modern:focus {
+    background: rgba(255,255,255,0.1);
+    border-color: #10b981;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.2);
+}
+
+/* ════════════════════════════════════ */
+/* 📊 PROGRESS BARS */
+/* ════════════════════════════════════ */
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ════════════════════════════════════ */
+/* 🏷️ BADGES */
+/* ════════════════════════════════════ */
+.badge-paid {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 16px rgba(16,185,129,0.3);
+}
+
+.badge-partial {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 16px rgba(245,158,11,0.3);
+}
+
+.badge-unpaid {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 16px rgba(239,68,68,0.3);
+}
+
+/* ════════════════════════════════════ */
+/* 💫 AVATAR STYLES */
+/* ════════════════════════════════════ */
+.avatar-premium {
+    border: 4px solid rgba(255,255,255,0.2);
+    box-shadow: 0 20px 40px rgba(16,185,129,0.3), inset 0 0 20px rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.avatar-premium:hover {
+    box-shadow: 0 30px 60px rgba(16,185,129,0.4), inset 0 0 30px rgba(255,255,255,0.15);
+    transform: scale(1.05);
+}
+
+.avatar-status {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 3px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    animation: pulse 2s infinite;
+}
+
+/* ════════════════════════════════════ */
+/* 🌬️ SCROLLBAR */
+/* ════════════════════════════════════ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #10b981, #3b82f6);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #059669, #1e40af);
+}
+
+/* ════════════════════════════════════ */
+/* 📊 STAT NUMBERS */
+/* ════════════════════════════════════ */
+.stat-number {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+/* ════════════════════════════════════ */
+/* 🎯 SKELETON LOADING */
+/* ════════════════════════════════════ */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    background-size: 200% 100%;
+    animation: skeleton-loading 2s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ════════════════════════════════════ */
+/* 📱 RESPONSIVE */
+/* ════════════════════════════════════ */
+@media (max-width: 768px) {
+    .card-hover:hover {
+        transform: translateY(-6px) scale(1.01);
+    }
+
+    .avatar-premium {
+        width: 120px !important;
+        height: 120px !important;
+    }
+
+    .gradient-text {
+        font-size: 2.5rem;
+    }
+}
+
+/* ════════════════════════════════════ */
+/* 🌙 DARK MODE (Already Dark) */
+/* ════════════════════════════════════ */
+body {
+    color-scheme: dark;
+}
 </style>
 </head>
-<body class="text-white antialiased">
+<body class="text-white overflow-x-hidden">
 
+<!-- ╔════════════════════════════════════════╗ -->
+<!-- ║ 🌀 FLOATING BLOB BACKGROUND ELEMENTS   ║ -->
+<!-- ╚════════════════════════════════════════╝ -->
 <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-    <div class="blob bg-emerald-600 w-96 h-96 top-[-10%] left-[-10%]"></div>
-    <div class="blob bg-blue-600 w-[500px] h-[500px] top-[40%] right-[-15%]" style="animation-delay: -5s;"></div>
-    <div class="blob bg-indigo-600 w-80 h-80 bottom-[-10%] left-[20%]" style="animation-delay: -10s;"></div>
+    <div class="blob bg-green-500 w-96 h-96 top-0 -left-20"></div>
+    <div class="blob bg-blue-500 w-96 h-96 top-1/2 -right-20" style="animation-delay: 5s;"></div>
+    <div class="blob bg-indigo-500 w-96 h-96 bottom-0 left-1/3" style="animation-delay: 10s;"></div>
 </div>
 
-<nav class="glass-dark sticky top-0 z-50 px-4 md:px-6 py-4">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl gradient-btn flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <i class="fas fa-graduation-cap text-xl md:text-2xl"></i>
-            </div>
-            <div>
-                <h1 class="text-lg md:text-xl font-bold tracking-tight">School Payment</h1>
-                <p class="text-[10px] md:text-xs text-emerald-400 font-medium uppercase tracking-wider">Manager RDC</p>
-            </div>
-        </div>
-    </div>
-</nav>
+<!-- ╔════════════════════════════════════════╗ -->
+<!-- ║ 📍 PAGE D'ACCUEIL PUBLIQUE             ║ -->
+<!-- ╚════════════════════════════════════════╝ -->
+<div id="homePage" class="relative z-10 min-h-screen">
 
-<main id="homePage" class="relative z-10 min-h-[calc(100vh-80px)] flex flex-col items-center justify-center py-10 px-4">
-    <section class="max-w-4xl w-full mx-auto">
-        <div class="text-center fade-in mb-12">
-            <div class="inline-block mb-6 relative">
-                <div class="w-20 h-20 md:w-24 md:h-24 rounded-2xl glass flex items-center justify-center mx-auto border-emerald-500/30 border">
-                    <i class="fas fa-school text-4xl md:text-5xl text-emerald-400"></i>
+    <!-- ╔════════════════════════════════════════╗ -->
+    <!-- ║ 🧭 NAVBAR - STICKY HEADER              ║ -->
+    <!-- ╚════════════════════════════════════════╝ -->
+    <nav class="glass-dark sticky top-0 z-50 px-4 md:px-6 py-4 border-b border-white/5">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer">
+                <div class="w-12 h-12 rounded-xl gradient-btn flex items-center justify-center pulse-ring shadow-lg">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight">School Payment</h1>
+                    <p class="text-xs text-gray-400">Manager RDC 🇨🇩</p>
                 </div>
             </div>
-            <h1 class="text-4xl md:text-6xl font-black mb-4 leading-tight">
-                <span class="gradient-text">Smart Tracking</span><br>
-                <span class="text-white">Pour les Écoles</span>
+            <div class="text-xs md:text-sm text-gray-400">
+                <i class="fas fa-sync-alt mr-2 animate-spin"></i>
+                <span id="syncStatus">Synchronisé</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ╔════════════════════════════════════════╗ -->
+    <!-- ║ 🎯 HERO SECTION                        ║ -->
+    <!-- ╚════════════════════════════════════════╝ -->
+    <section class="px-4 md:px-6 py-12 md:py-20 max-w-7xl mx-auto">
+        <div class="text-center fade-in">
+            <!-- Logo avec animation float -->
+            <div class="inline-block float mb-6 md:mb-8">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-2xl gradient-btn flex items-center justify-center mx-auto shadow-2xl">
+                    <i class="fas fa-school text-4xl md:text-5xl"></i>
+                </div>
+            </div>
+
+            <!-- Titre principal -->
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight">
+                <span class="gradient-text block mb-2">School Payment</span>
+                <span class="text-white">Manager</span>
             </h1>
-            <p class="text-lg md:text-xl text-gray-300 mb-2">Suivi intelligent des paiements scolaires</p>
-            <p class="text-sm text-gray-400 mb-10 flex items-center justify-center gap-2">
-                <i class="fas fa-map-marker-alt text-red-500"></i> Optimisé pour la RDC 🇨🇩
+
+            <!-- Sous-titre -->
+            <p class="text-lg md:text-2xl text-gray-300 mb-3 md:mb-4">Smart student payment tracking system</p>
+            <p class="text-sm md:text-base text-gray-400 mb-8 md:mb-12">Solution moderne adaptée aux écoles de la RDC 🇨🇩</p>
+
+            <!-- CTA Button -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="showSearchById()" class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-id-card"></i>
+                    <span>Recherche par ID</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ╔════════════════════════════════════════╗ -->
+        <!-- ║ 🔎 SECTION RECHERCHE PAR ID             ║ -->
+        <!-- ╚════════════════════════════════════════╝ -->
+        <div id="searchByIdSection" class="hidden glass-premium rounded-3xl p-6 md:p-10 mt-12 md:mt-16 slide-in-up relative overflow-hidden border border-white/10">
+            
+            <!-- Header avec close button -->
+            <div class="flex items-center justify-between mb-6 md:mb-8 border-b border-white/10 pb-4 md:pb-6">
+                <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
+                    <i class="fas fa-search-plus text-green-400 pulse-soft"></i>
+                    <span>Suivi d'Élève en Temps Réel</span>
+                </h2>
+                <button onclick="hideSections()" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Description -->
+            <p class="text-sm md:text-base text-gray-400 mb-6 md:mb-8">
+                Saisissez l'identifiant unique de l'élève pour inspecter instantanément sa situation scolaire et financière.
             </p>
 
-            <button onclick="showSearchById()" class="gradient-btn w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 mx-auto shadow-xl shadow-emerald-500/20">
-                <i class="fas fa-id-card"></i> Rechercher un Élève
-            </button>
-        </div>
-
-        <div id="searchByIdSection" class="hidden glass rounded-3xl p-6 md:p-8 mb-8 slide-in w-full shadow-2xl border border-white/10">
-            <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
-                    <i class="fas fa-search text-emerald-400"></i> Inspection Dossier
-                </h2>
-                <button onclick="hideSections()" class="text-gray-500 hover:text-white transition-colors bg-white/5 w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-3">
+            <!-- Input Search Group -->
+            <div class="flex flex-col sm:flex-row gap-3 md:gap-4">
                 <div class="relative flex-1">
-                    <i class="fas fa-qrcode absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input id="searchIdInput" type="text" placeholder="Entrez le matricule (ex: STU001)" class="input-modern w-full pl-12 pr-6 py-4 rounded-xl text-white placeholder-gray-500 font-mono text-sm md:text-base" onkeypress="if(event.key==='Enter') searchById()">
+                    <i class="fas fa-fingerprint absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input 
+                        id="searchIdInput" 
+                        type="text" 
+                        placeholder="Ex: STD-2026-001, STU001..." 
+                        class="input-modern w-full pl-12 pr-6 py-3 md:py-4 rounded-xl text-white placeholder-gray-500 font-mono text-sm md:text-base"
+                        onkeypress="if(event.key==='Enter') searchById()"
+                    >
                 </div>
-                <button onclick="searchById()" class="gradient-btn px-8 py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg shadow-emerald-500/20 whitespace-nowrap">
-                    Vérifier <i class="fas fa-arrow-right"></i>
+                <button 
+                    onclick="searchById()" 
+                    class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg whitespace-nowrap text-sm md:text-base"
+                >
+                    <i class="fas fa-search"></i>
+                    <span>Lancer l'analyse</span>
                 </button>
             </div>
 
-            <div id="searchCardLoader" class="hidden my-12 flex flex-col items-center justify-center gap-4">
-                <div class="spinner"></div>
-                <p class="text-xs font-medium text-emerald-400 tracking-widest uppercase animate-pulse">Connexion à la base de données...</p>
-            </div>
-
-            <div id="searchResultById" class="mt-8 transition-all duration-300 min-h-[200px] flex items-center justify-center">
-                <div class="text-center text-gray-500 text-sm">
-                    <i class="fas fa-inbox text-3xl mb-3 opacity-50"></i>
-                    <p>Les résultats s'afficheront ici</p>
+            <!-- Loading Skeleton -->
+            <div id="searchCardLoader" class="hidden my-8 flex flex-col items-center justify-center gap-4 py-8">
+                <div class="spinner !w-12 !h-12"></div>
+                <div class="text-center">
+                    <p class="text-xs font-medium text-emerald-400 tracking-widest uppercase animate-pulse mb-2">Extraction de la base de données...</p>
+                    <div class="w-40 h-2 mx-auto rounded-full bg-white/10 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" style="animation: shimmer 1.5s infinite;"></div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Results Container -->
+            <div id="searchResultById" class="mt-8 md:mt-12 transition-all duration-300"></div>
         </div>
     </section>
-</main>
+</div>
 
+<!-- ╔════════════════════════════════════════╗ -->
+<!-- ║ 📱 GLOBAL LOADING OVERLAY              ║ -->
+<!-- ╚════════════════════════════════════════╝ -->
+<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-4">
+        <div class="spinner !w-16 !h-16"></div>
+        <p class="text-sm text-gray-300 animate-pulse">Chargement en cours...</p>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════╗ -->
+<!-- ║ 🧠 JAVASCRIPT - CORE LOGIC             ║ -->
+<!-- ╚════════════════════════════════════════╝ -->
 <script>
+
+// ════════════════════════════════════════════════════════════════
+// 📊 CONFIGURATION & STATE MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+
+// Google Sheets CSV URL
 const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
 
+// Global State
 let students = [];
+let editingStudentId = null;
+let isSyncing = false;
 
-// J'ai ajusté les montants en dollars pour correspondre à ton exemple de 500$
+// Demo Data (Fallback)
 const DEMO_STUDENTS = [
-    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500, paid: 500, year: '2024-2025', date: '2024-10-15' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300, paid: 150, year: '2024-2025', date: '' },
-    { id: 'STU003', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600, paid: 0, year: '2024-2025', date: '2024-01-15' }
+    { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
+    { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-08-20' },
+    { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
+    { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-11-05' },
 ];
 
-document.addEventListener('DOMContentLoaded', initializeApp);
+// ════════════════════════════════════════════════════════════════
+// 🚀 INITIALIZATION
+// ════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
 
 async function initializeApp() {
+    console.log('🚀 Initialisation de l\'application...');
+    
+    // Try to load from localStorage first
     const saved = localStorage.getItem('spm_students');
     if (saved) {
         students = JSON.parse(saved);
-    } else {
-        await loadFromGoogleSheets();
+        console.log(`✅ ${students.length} élèves chargés depuis le cache local`);
     }
     
-    if (students.length === 0) students = DEMO_STUDENTS;
-    localStorage.setItem('spm_students', JSON.stringify(students));
+    // Try to load from Google Sheets if no cache
+    if (!saved) {
+        const loaded = await loadFromGoogleSheets();
+        if (!loaded) {
+            students = DEMO_STUDENTS;
+            console.log('⚠️ Utilisation des données de démo');
+        }
+    }
+    
+    saveLocal();
+    updateSyncStatus(true);
 }
+
+// ════════════════════════════════════════════════════════════════
+// 📥 GOOGLE SHEETS LOADER
+// ════════════════════════════════════════════════════════════════
 
 async function loadFromGoogleSheets() {
     try {
-        const response = await fetch(GOOGLE_SHEETS_CSV_URL);
-        if (!response.ok) throw new Error('Erreur réseau');
+        console.log('📥 Téléchargement du Google Sheet CSV...');
+        updateSyncStatus(false);
+        
+        const response = await fetch(GOOGLE_SHEETS_CSV_URL, {
+            method: 'GET',
+            cache: 'no-cache'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const csvText = await response.text();
         const result = convertCSVToStudents(csvText);
-        if (result && result.length > 0) students = result;
+        
+        if (result && result.length > 0) {
+            students = result;
+            saveLocal();
+            console.log(`✅ ${students.length} élèves chargés depuis Google Sheets`);
+            updateSyncStatus(true);
+            return true;
+        }
     } catch(error) {
-        console.error('Erreur de chargement:', error);
+        console.error('❌ Erreur Google Sheets:', error);
+        updateSyncStatus(false);
     }
+    
+    return false;
 }
+
+// ════════════════════════════════════════════════════════════════
+// 📝 CSV PARSER
+// ════════════════════════════════════════════════════════════════
 
 function convertCSVToStudents(csvText) {
     try {
         const lines = csvText.split('\n').filter(line => line.trim());
-        if (lines.length < 2) return null;
+        if (lines.length < 2) {
+            console.error('❌ CSV vide ou invalide');
+            return null;
+        }
         
+        // Parse headers (case-insensitive)
         const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-        const getIdx = (...keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
         
-        const idx = {
-            id: getIdx('id', 'identifiant'),
-            name: getIdx('nom', 'name'),
-            cls: getIdx('classe', 'class'),
-            paid: getIdx('payé', 'paid'),
-            total: getIdx('total'),
-            photo: getIdx('photo', 'image'),
-            sex: getIdx('sexe', 'sex', 'gender'),
-            phone: getIdx('téléphone', 'phone'),
-            year: getIdx('année', 'year')
-        };
+        // Find column indices
+        const idIndex = headers.findIndex(h => h.includes('id'));
+        const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nom'));
+        const classIndex = headers.findIndex(h => h.includes('class') || h.includes('classe'));
+        const paidIndex = headers.findIndex(h => h.includes('paid') || h.includes('payé'));
+        const totalIndex = headers.findIndex(h => h.includes('total'));
+        const photoIndex = headers.findIndex(h => h.includes('photo') || h.includes('image'));
+        const sexIndex = headers.findIndex(h => h.includes('sex') || h.includes('sexe') || h.includes('gender'));
+        const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('téléphone'));
+        const yearIndex = headers.findIndex(h => h.includes('year') || h.includes('année'));
+        const dateIndex = headers.findIndex(h => h.includes('date'));
         
-        if (idx.id === -1) return null;
+        if (idIndex === -1) {
+            console.error('❌ Colonne ID non trouvée');
+            return null;
+        }
         
-        return lines.slice(1).map(line => {
-            const cells = line.split(',').map(c => c.trim());
-            if (!cells[idx.id]) return null;
-            return {
-                id: String(cells[idx.id]),
-                name: idx.name >= 0 ? cells[idx.name] : 'Inconnu',
-                class: idx.cls >= 0 ? cells[idx.cls] : '',
-                paid: idx.paid >= 0 ? Number(cells[idx.paid]) || 0 : 0,
-                total: idx.total >= 0 ? Number(cells[idx.total]) || 0 : 0,
-                photo: idx.photo >= 0 ? cells[idx.photo] : '',
-                sex: idx.sex >= 0 ? cells[idx.sex] : '',
-                phone: idx.phone >= 0 ? cells[idx.phone] : '',
-                year: idx.year >= 0 ? cells[idx.year] : '2024-2025'
-            };
-        }).filter(Boolean);
-    } catch(e) {
+        // Parse students
+        const sheetStudents = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cells = lines[i].split(',').map(c => c.trim());
+            const id = cells[idIndex];
+            
+            if (!id) continue;
+            
+            sheetStudents.push({
+                id: String(id),
+                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom') : 'Sans nom',
+                class: classIndex >= 0 ? String(cells[classIndex] || '') : '',
+                paid: paidIndex >= 0 ? Number(cells[paidIndex]) || 0 : 0,
+                total: totalIndex >= 0 ? Number(cells[totalIndex]) || 0 : 0,
+                photo: photoIndex >= 0 ? String(cells[photoIndex] || '') : '',
+                sex: sexIndex >= 0 ? String(cells[sexIndex] || '') : '',
+                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '') : '',
+                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026') : '2025-2026',
+                date: dateIndex >= 0 ? String(cells[dateIndex] || '') : ''
+            });
+        }
+        
+        return sheetStudents.length > 0 ? sheetStudents : null;
+    } catch(error) {
+        console.error('❌ Erreur parsing CSV:', error);
         return null;
     }
 }
 
-function showSearchById() { 
-    const section = document.getElementById('searchByIdSection');
-    section.classList.remove('hidden'); 
-    section.scrollIntoView({behavior:'smooth', block: 'center'});
-    setTimeout(() => document.getElementById('searchIdInput').focus(), 300);
+// ════════════════════════════════════════════════════════════════
+// 💾 LOCAL STORAGE MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+
+function saveLocal() {
+    try {
+        localStorage.setItem('spm_students', JSON.stringify(students));
+        console.log('💾 Données sauvegardées localement');
+    } catch(error) {
+        console.warn('⚠️ Erreur lors de la sauvegarde locale:', error);
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎯 SEARCH BY ID FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+
+function showSearchById() {
+    hideSections();
+    document.getElementById('searchByIdSection').classList.remove('hidden');
+    document.getElementById('searchByIdSection').classList.add('slide-in-up');
+    
+    setTimeout(() => {
+        document.getElementById('searchByIdSection').scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+        });
+        document.getElementById('searchIdInput').focus();
+    }, 300);
 }
 
 function hideSections() {
-    document.getElementById('searchByIdSection').classList.add('hidden');
-    document.getElementById('searchResultById').innerHTML = `
-        <div class="text-center text-gray-500 text-sm">
-            <i class="fas fa-inbox text-3xl mb-3 opacity-50"></i>
-            <p>Les résultats s'afficheront ici</p>
-        </div>
-    `;
-    document.getElementById('searchIdInput').value = '';
+    const section = document.getElementById('searchByIdSection');
+    section.classList.add('hidden');
+    section.classList.remove('slide-in-up');
 }
 
 async function searchById() {
@@ -229,201 +802,453 @@ async function searchById() {
     const resultContainer = document.getElementById('searchResultById');
     const loader = document.getElementById('searchCardLoader');
     
-    if (!id) return idInput.focus();
-
-    resultContainer.innerHTML = '';
-    loader.classList.remove('hidden');
-
-    await new Promise(r => setTimeout(r, 600));
-    loader.classList.add('hidden');
-
-    const student = students.find(s => s.id.trim().toUpperCase() === id);
-
-    if (!student) {
-        resultContainer.innerHTML = `
-            <div class="w-full glass border-red-500/30 bg-red-500/5 rounded-2xl p-6 text-center flex flex-col items-center gap-3 fade-in">
-                <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
-                    <i class="fas fa-search-minus text-2xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-red-400">Matricule Introuvable</h3>
-                    <p class="text-gray-400 text-sm mt-1">L'identifiant <span class="text-white font-mono bg-white/10 px-2 py-0.5 rounded">${id}</span> n'existe pas.</p>
-                </div>
-            </div>
-        `;
+    if (!id) {
+        idInput.focus();
         return;
     }
 
+    // Clear previous results
+    resultContainer.innerHTML = '';
+    resultContainer.style.opacity = '0';
+    loader.classList.remove('hidden');
+
+    // Simulate network delay for effect
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    loader.classList.add('hidden');
+
+    // Search for student
+    let student = students.find(s => s.id.trim().toUpperCase() === id);
+
+    if (!student) {
+        resultContainer.innerHTML = buildNotFoundCard(id);
+        resultContainer.style.opacity = '1';
+        return;
+    }
+
+    // Build and display result
     resultContainer.innerHTML = buildPremiumStudentCard(student);
+    resultContainer.style.opacity = '1';
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎨 CARD BUILDERS
+// ════════════════════════════════════════════════════════════════
+
+function buildNotFoundCard(id) {
+    return `
+        <div class="glass-premium border border-red-500/30 bg-gradient-to-br from-red-950/20 to-red-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-xl backdrop-blur-md fade-in">
+            <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-2">
+                <i class="fas fa-user-slash text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-red-400">Élève Introuvable</h3>
+            <p class="text-gray-300 text-base max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-3 py-1 rounded text-sm">${id}</span> ne correspond à aucun dossier actif.</p>
+            <span class="text-xs text-gray-500">Vérifiez la syntaxe ou contactez le guichet de l'établissement.</span>
+            <button onclick="document.getElementById('searchIdInput').focus()" class="mt-4 gradient-btn-blue px-6 py-2 rounded-lg text-sm font-bold">
+                <i class="fas fa-redo mr-2"></i>Nouvelle recherche
+            </button>
+        </div>
+    `;
 }
 
 function buildPremiumStudentCard(s) {
+    // Calculate financial metrics
     const total = Number(s.total) || 0;
     const paid = Number(s.paid) || 0;
     const remaining = total - paid;
-    const percentage = total > 0 ? Math.min(Math.round((paid / total) * 100), 100) : 0;
+    const percentagePaid = total > 0 ? Math.round((paid / total) * 100) : 0;
     
-    let badgeClass = 'badge-unpaid', statusText = 'Non Payé', icon = 'times-circle';
-    if (paid >= total && total > 0) { badgeClass = 'badge-paid'; statusText = 'En Règle'; icon = 'check-circle'; } 
-    else if (paid > 0) { badgeClass = 'badge-partial'; statusText = 'Solde Incomplet'; icon = 'exclamation-triangle'; }
+    // Determine status
+    let badgeClass = 'badge-unpaid';
+    let statusText = 'Non Payé';
+    let statusIcon = 'times-circle';
+    let statusColor = 'text-red-400';
+    
+    if (paid >= total) {
+        badgeClass = 'badge-paid';
+        statusText = 'Paiement à Jour';
+        statusIcon = 'check-circle';
+        statusColor = 'text-green-400';
+    } else if (paid > 0) {
+        badgeClass = 'badge-partial';
+        statusText = 'Solde Incomplet';
+        statusIcon = 'exclamation-circle';
+        statusColor = 'text-yellow-400';
+    }
 
-    const avatarUrl = s.photo ? s.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=0d1117&color=10b981&size=200&bold=true`;
-
-    const paymentUI = remaining > 0 ? `
-        <div class="mt-6 pt-6 border-t border-white/5">
-            <p class="text-xs text-gray-400 uppercase tracking-wider mb-3 font-semibold text-center md:text-left">Régulariser via Mobile Money</p>
-            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
-                <button class="bg-[#FF0000]/20 hover:bg-[#FF0000]/40 border border-[#FF0000]/50 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
-                    <i class="fas fa-mobile-alt"></i> Airtel Money
-                </button>
-                <button class="bg-[#009933]/20 hover:bg-[#009933]/40 border border-[#009933]/50 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
-                    <i class="fas fa-mobile-alt"></i> M-Pesa
-                </button>
-                <button class="bg-[#FF6600]/20 hover:bg-[#FF6600]/40 border border-[#FF6600]/50 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
-                    <i class="fas fa-mobile-alt"></i> Orange Money
-                </button>
-            </div>
-        </div>
-    ` : '';
+    // Get photo with fallback
+    const finalPhoto = s.photo && s.photo.trim() !== ''
+        ? s.photo
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=3b82f6&color=fff&size=300&bold=true&font-size=0.4`;
 
     return `
-        <div class="w-full glass bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden fade-in">
-            <i class="fas fa-user-graduate absolute -right-10 -bottom-10 text-9xl text-white opacity-[0.02] pointer-events-none"></i>
+        <div class="glass-premium border border-white/10 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl fade-in">
             
-            <div class="flex flex-col md:flex-row gap-6 relative z-10">
-                <div class="flex flex-col items-center flex-shrink-0">
-                    <div class="w-28 h-28 md:w-32 md:h-32 rounded-2xl bg-black/50 border-2 border-white/10 overflow-hidden shadow-xl p-1 mb-4 relative">
-                        <img src="${avatarUrl}" alt="${s.name}" class="w-full h-full object-cover rounded-xl">
-                        <div class="absolute bottom-2 right-2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f1729] shadow-lg animate-pulse"></div>
+            <!-- 🎨 HEADER DECORATION -->
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- 📋 MAIN CONTENT -->
+            <div class="relative p-6 md:p-10">
+                
+                <!-- FLEX CONTAINER -->
+                <div class="flex flex-col lg:flex-row gap-8 md:gap-10">
+                    
+                    <!-- 👤 AVATAR SECTION -->
+                    <div class="flex-shrink-0 flex flex-col items-center">
+                        <div class="relative inline-block mb-6">
+                            <!-- Avatar Image -->
+                            <img 
+                                src="${finalPhoto}" 
+                                alt="${s.name}" 
+                                class="avatar-premium w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover shadow-2xl"
+                            >
+                            
+                            <!-- Status Badge -->
+                            <div class="absolute -bottom-3 -right-3 avatar-status">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Badge -->
+                        <span class="${badgeClass} inline-flex items-center gap-2 px-6 py-2 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider">
+                            <i class="fas fa-${statusIcon}"></i> ${statusText}
+                        </span>
                     </div>
-                    <span class="${badgeClass} px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg">
-                        <i class="fas fa-${icon}"></i> ${statusText}
-                    </span>
+
+                    <!-- 📊 INFO SECTION -->
+                    <div class="flex-1 flex flex-col justify-between">
+                        
+                        <!-- HEADER INFO -->
+                        <div>
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-6">
+                                <div>
+                                    <h3 class="text-2xl md:text-3xl font-black text-white tracking-tight">${s.name}</h3>
+                                    <p class="text-sm text-gray-400 mt-1">Élève actif - ${s.year}</p>
+                                </div>
+                            </div>
+
+                            <!-- STUDENT DETAILS GRID -->
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
+                                
+                                <!-- ID -->
+                                <div class="col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">ID Étudiant</p>
+                                    <p class="font-mono text-sm md:text-base font-semibold text-blue-400">${s.id}</p>
+                                </div>
+                                
+                                <!-- CLASS -->
+                                <div class="col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Classe</p>
+                                    <p class="text-sm md:text-base font-semibold text-white">${s.class || 'N/A'}</p>
+                                </div>
+                                
+                                <!-- GENDER -->
+                                <div class="col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Genre</p>
+                                    <p class="text-sm md:text-base font-semibold text-gray-300">
+                                        ${s.sex === 'M' ? '👨 Masculin' : s.sex === 'F' ? '👩 Féminin' : s.sex || 'N/A'}
+                                    </p>
+                                </div>
+                                
+                                <!-- PHONE -->
+                                <div class="col-span-2 md:col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Contact</p>
+                                    <p class="text-sm md:text-base font-mono text-gray-300">${s.phone || 'Non renseigné'}</p>
+                                </div>
+                                
+                                <!-- YEAR -->
+                                <div class="col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Année</p>
+                                    <p class="text-sm md:text-base font-semibold text-emerald-400">${s.year}</p>
+                                </div>
+                                
+                                <!-- DATE -->
+                                <div class="col-span-1">
+                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Dernier Paiement</p>
+                                    <p class="text-sm md:text-base font-semibold text-gray-300">${s.date ? formatDate(s.date) : 'Aucun'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 💰 FINANCIAL SECTION -->
+                        <div class="border-t border-white/10 pt-6 md:pt-8">
+                            
+                            <!-- PROGRESS SECTION -->
+                            <div class="mb-8">
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider">État du Paiement</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg md:text-2xl font-black text-emerald-400 stat-number">${percentagePaid}%</span>
+                                        <span class="text-xs text-gray-500">complété</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- PROGRESS BAR -->
+                                <div class="progress-container">
+                                    <div 
+                                        class="progress-fill" 
+                                        style="width: ${Math.min(percentagePaid, 100)}%; --progress-width: ${Math.min(percentagePaid, 100)}%;"
+                                    ></div>
+                                </div>
+                                
+                                <!-- PROGRESS TEXT -->
+                                <p class="text-xs text-gray-400 mt-3">
+                                    ${percentagePaid === 100 ? '✅ Paiement intégralement complété' : `Restant: ${remaining.toLocaleString()} FC`}
+                                </p>
+                            </div>
+
+                            <!-- FINANCIAL CARDS -->
+                            <div class="grid grid-cols-3 gap-3 md:gap-4">
+                                
+                                <!-- TOTAL -->
+                                <div class="glass rounded-xl p-4 md:p-5 text-center border border-white/10">
+                                    <span class="text-xs text-gray-400 block uppercase font-bold tracking-wider mb-2">Frais Total</span>
+                                    <span class="text-lg md:text-2xl font-extrabold text-white stat-number">${total.toLocaleString()}</span>
+                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                                </div>
+                                
+                                <!-- PAID -->
+                                <div class="glass rounded-xl p-4 md:p-5 text-center border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                                    <span class="text-xs text-emerald-400 block uppercase font-bold tracking-wider mb-2">Payé</span>
+                                    <span class="text-lg md:text-2xl font-extrabold text-emerald-400 stat-number">${paid.toLocaleString()}</span>
+                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                                </div>
+                                
+                                <!-- REMAINING -->
+                                <div class="glass rounded-xl p-4 md:p-5 text-center border ${remaining > 0 ? 'border-red-500/20 bg-gradient-to-br from-red-500/5' : 'border-green-500/20 bg-gradient-to-br from-green-500/5'} to-transparent">
+                                    <span class="text-xs ${remaining > 0 ? 'text-red-400' : 'text-green-400'} block uppercase font-bold tracking-wider mb-2">Reste</span>
+                                    <span class="text-lg md:text-2xl font-extrabold ${remaining > 0 ? 'text-red-400' : 'text-green-400'} stat-number">${remaining.toLocaleString()}</span>
+                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex-1 flex flex-col justify-between">
-                    <div>
-                        <div class="flex flex-col md:flex-row md:items-start justify-between gap-2 mb-4 text-center md:text-left">
-                            <div>
-                                <h3 class="text-2xl font-black text-white">${s.name}</h3>
-                                <p class="text-emerald-400 font-mono text-sm mt-1">${s.id}</p>
-                            </div>
-                            <span class="inline-block bg-white/5 border border-white/10 px-3 py-1 rounded-md text-xs text-gray-300 font-medium self-center md:self-start">
-                                ${s.year || '2024-2025'}
-                            </span>
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 bg-black/20 p-4 rounded-xl border border-white/5">
-                            <div>
-                                <p class="text-[10px] text-gray-400 uppercase font-bold">Classe</p>
-                                <p class="text-sm font-semibold text-white mt-0.5 truncate">${s.class}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-400 uppercase font-bold">Genre</p>
-                                <p class="text-sm font-semibold text-white mt-0.5">${s.sex === 'M' || s.sex === 'masculin' ? 'Masculin' : s.sex === 'F' || s.sex === 'féminin' ? 'Féminin' : 'N/A'}</p>
-                            </div>
-                            <div class="col-span-2 md:col-span-1">
-                                <p class="text-[10px] text-gray-400 uppercase font-bold">Contact</p>
-                                <p class="text-sm font-mono text-white mt-0.5 truncate">${s.phone || 'Non défini'}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-xs text-gray-400 uppercase font-bold">Progression de la paie</span>
-                            <span class="text-lg font-black text-emerald-400">${percentage}%</span>
-                        </div>
-                        <div class="w-full bg-white/10 rounded-full h-2.5 mb-4 overflow-hidden border border-white/5">
-                            <div class="bg-gradient-to-r from-emerald-500 to-green-400 h-full transition-all duration-1000 ease-out" style="width: ${percentage}%"></div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2 text-center md:text-left bg-gradient-to-r from-white/5 to-transparent p-3 rounded-xl">
-                            <div>
-                                <p class="text-[10px] text-gray-400 uppercase">Frais Total</p>
-                                <p class="font-bold text-white">$${total.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-400 uppercase">Payé</p>
-                                <p class="font-bold text-emerald-400">$${paid.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-400 uppercase">Reste</p>
-                                <p class="font-bold ${remaining > 0 ? 'text-red-400' : 'text-gray-500'}">$${remaining.toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${paymentUI}
-
-                    <div class="mt-6 flex gap-3 justify-center md:justify-end">
-                        <button onclick="printStudentCard('${s.id}')" class="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2">
-                            <i class="fas fa-print"></i> Reçu / Fiche
-                        </button>
-                    </div>
+                <!-- 🎯 ACTION BUTTONS -->
+                <div class="flex gap-3 mt-8 md:mt-10 flex-wrap justify-center lg:justify-start border-t border-white/10 pt-6 md:pt-8">
+                    <button 
+                        onclick="printStudentCard('${s.id}')" 
+                        class="gradient-btn px-6 py-2 rounded-lg text-sm md:text-base font-bold flex items-center gap-2 shadow-lg"
+                    >
+                        <i class="fas fa-print"></i>
+                        <span>Imprimer</span>
+                    </button>
+                    <button 
+                        onclick="document.getElementById('searchIdInput').focus(); document.getElementById('searchIdInput').value = '';" 
+                        class="gradient-btn-blue px-6 py-2 rounded-lg text-sm md:text-base font-bold flex items-center gap-2 shadow-lg"
+                    >
+                        <i class="fas fa-search"></i>
+                        <span>Nouvelle Recherche</span>
+                    </button>
                 </div>
             </div>
         </div>
     `;
 }
+
+// ════════════════════════════════════════════════════════════════
+// 🖨️ PRINT FUNCTIONS
+// ════════════════════════════════════════════════════════════════
 
 function printStudentCard(studentId) {
     const student = students.find(s => s.id === studentId);
     if (!student) return;
     
-    const printWindow = window.open('', '_blank');
     const total = Number(student.total) || 0;
     const paid = Number(student.paid) || 0;
     const remaining = total - paid;
+    const percentagePaid = total > 0 ? Math.round((paid / total) * 100) : 0;
     
     const html = `
         <!DOCTYPE html>
-        <html>
+        <html lang="fr">
         <head>
+            <meta charset="UTF-8">
             <title>Fiche Élève - ${student.name}</title>
             <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #111827; }
-                .receipt { max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; padding: 30px; border-radius: 8px; }
-                .header { text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
-                .header h1 { margin: 0; color: #10b981; font-size: 24px; }
-                .header p { margin: 5px 0 0 0; color: #6b7280; font-size: 14px; }
-                .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
-                .label { color: #6b7280; font-weight: bold; font-size: 12px; text-transform: uppercase; }
-                .value { font-weight: 600; text-align: right; }
-                .totals { margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 6px; }
-                .totals .row:last-child { border-bottom: none; font-size: 18px; color: ${remaining > 0 ? '#ef4444' : '#10b981'}; }
-                .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #9ca3af; }
-                @media print { body { padding: 0; } .receipt { border: none; } }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    padding: 20px; 
+                    background: #f5f5f5; 
+                }
+                .container { max-width: 800px; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin: 0 auto; }
+                .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #10b981; padding-bottom: 20px; }
+                .header h1 { color: #10b981; font-size: 32px; margin-bottom: 5px; }
+                .header p { color: #6b7280; font-size: 14px; }
+                .section { margin-bottom: 30px; }
+                .section-title { font-size: 14px; color: #6b7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 15px; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+                .info-item { padding: 15px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #10b981; }
+                .info-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+                .info-value { font-size: 16px; font-weight: 600; color: #1f2937; }
+                .finances { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+                .finance-box { 
+                    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    text-align: center; 
+                    border: 2px solid #e5e7eb;
+                }
+                .finance-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
+                .finance-value { font-size: 24px; font-weight: 700; color: #1f2937; }
+                .progress-section { margin: 30px 0; }
+                .progress-bar { width: 100%; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin: 15px 0; }
+                .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: ${percentagePaid}%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+                .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+                @media print { body { background: white; padding: 0; } .container { box-shadow: none; } }
             </style>
         </head>
         <body>
-            <div class="receipt">
+            <div class="container">
                 <div class="header">
-                    <h1>School Payment Manager</h1>
-                    <p>Reçu de Situation Financière - RDC</p>
+                    <h1>📋 Fiche de Suivi Élève</h1>
+                    <p>School Payment Manager - RDC</p>
                 </div>
-                <div class="row"><span class="label">Date d'édition</span><span class="value">${new Date().toLocaleDateString('fr-FR')}</span></div>
-                <div class="row"><span class="label">Matricule</span><span class="value">${student.id}</span></div>
-                <div class="row"><span class="label">Nom de l'élève</span><span class="value">${student.name}</span></div>
-                <div class="row"><span class="label">Classe & Année</span><span class="value">${student.class} (${student.year})</span></div>
-                
-                <div class="totals">
-                    <div class="row"><span class="label">Frais Totaux Fixés</span><span class="value">$${total.toLocaleString()}</span></div>
-                    <div class="row"><span class="label">Montant Déjà Versé</span><span class="value" style="color:#10b981">$${paid.toLocaleString()}</span></div>
-                    <div class="row"><span class="label">Reste à Payer</span><span class="value">$${remaining.toLocaleString()}</span></div>
+
+                <div class="section">
+                    <div class="section-title">Informations Personnelles</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Identifiant</div>
+                            <div class="info-value">${student.id}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Nom Complet</div>
+                            <div class="info-value">${student.name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Classe</div>
+                            <div class="info-value">${student.class || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Année Scolaire</div>
+                            <div class="info-value">${student.year}</div>
+                        </div>
+                    </div>
                 </div>
-                
+
+                <div class="section">
+                    <div class="section-title">État Financier</div>
+                    <div class="finances">
+                        <div class="finance-box">
+                            <div class="finance-label">💰 Frais Total</div>
+                            <div class="finance-value">${total.toLocaleString()}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
+                        </div>
+                        <div class="finance-box" style="border-color: #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%);">
+                            <div class="finance-label" style="color: #10b981;">✅ Montant Payé</div>
+                            <div class="finance-value" style="color: #10b981;">${paid.toLocaleString()}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
+                        </div>
+                        <div class="finance-box" style="border-color: #ef4444; background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.05) 100%);">
+                            <div class="finance-label" style="color: #ef4444;">📌 Reste Obligatoire</div>
+                            <div class="finance-value" style="color: #ef4444;">${remaining.toLocaleString()}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="section-title">Progression du Paiement</div>
+                    <p style="margin-bottom: 10px; color: #1f2937; font-weight: 600;">${percentagePaid}% Complété</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill">${percentagePaid}%</div>
+                    </div>
+                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
+                        ${percentagePaid === 100 ? '✅ Paiement intégralement complété' : `Solde à payer: ${remaining.toLocaleString()} FC`}
+                    </p>
+                </div>
+
                 <div class="footer">
-                    <p>Ce document atteste de la situation financière à la date d'impression.</p>
+                    <p>Généré le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    <p style="margin-top: 10px;">Pour toute question: <strong>contact@schoolpayment.cd</strong></p>
+                    <p style="margin-top: 15px; font-size: 11px;">Document officiel - School Payment Manager © 2026</p>
                 </div>
             </div>
-            <script>window.onload = function() { window.print(); window.close(); }<\/script>
         </body>
         </html>
     `;
+    
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(html);
     printWindow.document.close();
+    
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+    }, 500);
 }
+
+// ════════════════════════════════════════════════════════════════
+// 🛠️ UTILITY FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch {
+        return dateString;
+    }
+}
+
+function updateSyncStatus(success) {
+    const syncStatus = document.getElementById('syncStatus');
+    if (success) {
+        syncStatus.textContent = '✅ Synchronisé';
+        syncStatus.style.color = '#10b981';
+    } else {
+        syncStatus.textContent = '⚠️ Hors ligne';
+        syncStatus.style.color = '#f59e0b';
+    }
+}
+
+function showLoading() {
+    document.getElementById('loading').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════════════
+// ⌨️ KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', (e) => {
+    // Ctrl+K or Cmd+K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        showSearchById();
+    }
+    
+    // Escape to close search
+    if (e.key === 'Escape') {
+        hideSections();
+    }
+});
+
+// ════════════════════════════════════════════════════════════════
+// 🔄 AUTO-SYNC TIMER (Every 5 minutes)
+// ════════════════════════════════════════════════════════════════
+
+setInterval(() => {
+    if (!isSyncing) {
+        isSyncing = true;
+        loadFromGoogleSheets().then(() => {
+            isSyncing = false;
+        });
+    }
+}, 5 * 60 * 1000); // 5 minutes
+
 </script>
+
 </body>
 </html>
