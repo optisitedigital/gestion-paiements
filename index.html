@@ -607,8 +607,8 @@ body {
 // 📊 CONFIGURATION & STATE MANAGEMENT
 // ════════════════════════════════════════════════════════════════
 
-// Google Sheets CSV URL
-const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv';
+// Google Sheets GVIZ URL - Works with CORS
+const GOOGLE_SHEETS_GVIZ_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/gviz/tq?tqx=out:csv';
 
 // Global State
 let students = [];
@@ -654,7 +654,7 @@ async function initializeApp() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 🔄 REAL-TIME DATA FETCH - ANTI-CACHE
+// 🔄 REAL-TIME DATA FETCH - ANTI-CACHE AVEC GVIZ API
 // ════════════════════════════════════════════════════════════════
 
 async function fetchFreshDataFromGoogleSheets() {
@@ -663,7 +663,7 @@ async function fetchFreshDataFromGoogleSheets() {
         
         // Add timestamp to prevent caching
         const timestamp = Date.now();
-        const urlWithTimestamp = `${GOOGLE_SHEETS_CSV_URL}&t=${timestamp}`;
+        const urlWithTimestamp = `${GOOGLE_SHEETS_GVIZ_URL}&t=${timestamp}`;
         
         const response = await fetch(urlWithTimestamp, {
             method: 'GET',
@@ -702,6 +702,7 @@ async function fetchFreshDataFromGoogleSheets() {
         
     } catch(error) {
         console.error('❌ Erreur lors de la récupération Google Sheets:', error);
+        console.warn('⚠️ Utilisation des données en cache local');
         return null;
     }
 }
@@ -861,11 +862,15 @@ async function searchById() {
         const freshData = await fetchFreshDataFromGoogleSheets();
         
         if (!freshData) {
-            throw new Error('Impossible de récupérer les données');
+            // Utiliser les données en cache si la récupération échoue
+            console.log('📦 Utilisation du cache local');
+            students = students.length > 0 ? students : DEMO_STUDENTS;
+        } else {
+            students = freshData;
         }
 
-        // Search in fresh data
-        let student = freshData.find(s => s.id.trim().toUpperCase() === id);
+        // Search in data
+        let student = students.find(s => s.id.trim().toUpperCase() === id);
 
         // Smooth transition
         await new Promise(resolve => setTimeout(resolve, 400));
@@ -908,7 +913,7 @@ function buildErrorCard(errorMessage) {
                 <i class="fas fa-exclamation-triangle text-3xl"></i>
             </div>
             <h3 class="text-2xl font-bold text-red-400">Erreur de Connexion</h3>
-            <p class="text-gray-300 text-base max-w-md">${errorMessage || 'Une erreur est survenue lors de la récupération des données. Vérifiez votre connexion internet.'}</p>
+            <p class="text-gray-300 text-base max-w-md">${errorMessage || 'Une erreur est survenue. Le système utilisera les données en cache si disponibles.'}</p>
             <span class="text-xs text-gray-500">Assurez-vous d\'avoir une connexion internet stable et réessayez.</span>
             <button onclick="searchById()" class="mt-4 gradient-btn-blue px-6 py-2 rounded-lg text-sm font-bold transition-all hover:shadow-lg">
                 <i class="fas fa-redo mr-2"></i>Réessayer
