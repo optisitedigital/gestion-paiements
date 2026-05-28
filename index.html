@@ -501,8 +501,8 @@ body {
                 </div>
             </div>
             <div class="text-xs md:text-sm text-gray-400">
-                <i class="fas fa-sync-alt mr-2 animate-spin"></i>
-                <span id="syncStatus">Synchronisé</span>
+                <i class="fas fa-sync-alt mr-2" id="syncIcon"></i>
+                <span id="syncStatus">Prêt</span>
             </div>
         </div>
     </nav>
@@ -531,7 +531,7 @@ body {
 
             <!-- CTA Button -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onclick="showSearchById()" class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl">
+                <button onclick="showSearchById()" class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl transition-all">
                     <i class="fas fa-id-card"></i>
                     <span>Recherche par ID</span>
                 </button>
@@ -556,7 +556,7 @@ body {
 
             <!-- Description -->
             <p class="text-sm md:text-base text-gray-400 mb-6 md:mb-8">
-                Saisissez l'identifiant unique de l'élève pour inspecter instantanément sa situation scolaire et financière.
+                Saisissez l'identifiant unique de l'élève pour inspecter instantanément sa situation scolaire et financière. Les données sont actualisées en temps réel.
             </p>
 
             <!-- Input Search Group -->
@@ -572,8 +572,9 @@ body {
                     >
                 </div>
                 <button 
+                    id="searchBtn"
                     onclick="searchById()" 
-                    class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg whitespace-nowrap text-sm md:text-base"
+                    class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold flex items-center gap-2 justify-center shadow-lg whitespace-nowrap text-sm md:text-base transition-all"
                 >
                     <i class="fas fa-search"></i>
                     <span>Lancer l'analyse</span>
@@ -584,7 +585,7 @@ body {
             <div id="searchCardLoader" class="hidden my-8 flex flex-col items-center justify-center gap-4 py-8">
                 <div class="spinner !w-12 !h-12"></div>
                 <div class="text-center">
-                    <p class="text-xs font-medium text-emerald-400 tracking-widest uppercase animate-pulse mb-2">Extraction de la base de données...</p>
+                    <p class="text-xs font-medium text-emerald-400 tracking-widest uppercase animate-pulse mb-2">Récupération des données actualisées...</p>
                     <div class="w-40 h-2 mx-auto rounded-full bg-white/10 overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" style="animation: shimmer 1.5s infinite;"></div>
                     </div>
@@ -595,16 +596,6 @@ body {
             <div id="searchResultById" class="mt-8 md:mt-12 transition-all duration-300"></div>
         </div>
     </section>
-</div>
-
-<!-- ╔════════════════════════════════════════╗ -->
-<!-- ║ 📱 GLOBAL LOADING OVERLAY              ║ -->
-<!-- ╚════════════════════════════════════════╝ -->
-<div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-    <div class="flex flex-col items-center gap-4">
-        <div class="spinner !w-16 !h-16"></div>
-        <p class="text-sm text-gray-300 animate-pulse">Chargement en cours...</p>
-    </div>
 </div>
 
 <!-- ╔════════════════════════════════════════╗ -->
@@ -622,16 +613,16 @@ const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1v
 // Global State
 let students = [];
 let editingStudentId = null;
-let isSyncing = false;
+let isSearching = false;
 
 // Demo Data (Fallback)
 const DEMO_STUDENTS = [
     { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
     { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-05' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-08-05' },
     { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
     { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-11-03' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-07-15' },
 ];
 
 // ════════════════════════════════════════════════════════════════
@@ -645,38 +636,43 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializeApp() {
     console.log('🚀 Initialisation de l\'application...');
     
-    // Try to load from localStorage first
+    // Try to load from localStorage for initial display
     const saved = localStorage.getItem('spm_students');
     if (saved) {
-        students = JSON.parse(saved);
-        console.log(`✅ ${students.length} élèves chargés depuis le cache local`);
-    }
-    
-    // Try to load from Google Sheets if no cache
-    if (!saved) {
-        const loaded = await loadFromGoogleSheets();
-        if (!loaded) {
+        try {
+            students = JSON.parse(saved);
+            console.log(`✅ ${students.length} élèves chargés depuis le cache local`);
+        } catch(e) {
+            console.warn('⚠️ Erreur parsing cache local');
             students = DEMO_STUDENTS;
-            console.log('⚠️ Utilisation des données de démo');
         }
+    } else {
+        students = DEMO_STUDENTS;
     }
     
-    saveLocal();
     updateSyncStatus(true);
 }
 
 // ════════════════════════════════════════════════════════════════
-// 📥 GOOGLE SHEETS LOADER
+// 🔄 REAL-TIME DATA FETCH - ANTI-CACHE
 // ════════════════════════════════════════════════════════════════
 
-async function loadFromGoogleSheets() {
+async function fetchFreshDataFromGoogleSheets() {
     try {
-        console.log('📥 Téléchargement du Google Sheet CSV...');
-        updateSyncStatus(false);
+        console.log('📥 Récupération des données fraîches depuis Google Sheets...');
         
-        const response = await fetch(GOOGLE_SHEETS_CSV_URL, {
+        // Add timestamp to prevent caching
+        const timestamp = Date.now();
+        const urlWithTimestamp = `${GOOGLE_SHEETS_CSV_URL}&t=${timestamp}`;
+        
+        const response = await fetch(urlWithTimestamp, {
             method: 'GET',
-            cache: 'no-cache'
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
         });
         
         if (!response.ok) {
@@ -684,21 +680,30 @@ async function loadFromGoogleSheets() {
         }
         
         const csvText = await response.text();
+        
+        if (!csvText || csvText.trim().length === 0) {
+            throw new Error('CSV vide ou invalide');
+        }
+        
         const result = convertCSVToStudents(csvText);
         
         if (result && result.length > 0) {
-            students = result;
-            saveLocal();
-            console.log(`✅ ${students.length} élèves chargés depuis Google Sheets`);
-            updateSyncStatus(true);
-            return true;
+            console.log(`✅ ${result.length} élèves récupérés depuis Google Sheets (timestamp: ${timestamp})`);
+            // Save to localStorage for offline fallback
+            try {
+                localStorage.setItem('spm_students', JSON.stringify(result));
+            } catch(e) {
+                console.warn('⚠️ Impossible de sauvegarder en cache local');
+            }
+            return result;
+        } else {
+            throw new Error('Impossible de parser le CSV');
         }
+        
     } catch(error) {
-        console.error('❌ Erreur Google Sheets:', error);
-        updateSyncStatus(false);
+        console.error('❌ Erreur lors de la récupération Google Sheets:', error);
+        return null;
     }
-    
-    return false;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -765,7 +770,7 @@ function convertCSVToStudents(csvText) {
         console.log(`🔍 Indices trouvés - ID: ${idIndex}, Name: ${nameIndex}, Class: ${classIndex}, Paid: ${paidIndex}, Total: ${totalIndex}`);
         
         if (idIndex === -1) {
-            console.error('❌ Colonne ID non trouvée. Headers disponibles:', headers);
+            console.error('❌ Colonne ID non trouvée');
             return null;
         }
         
@@ -778,20 +783,19 @@ function convertCSVToStudents(csvText) {
             if (!id) continue;
             
             const student = {
-                id: String(id).replace(/"/g, ''),
-                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom').replace(/"/g, '') : 'Sans nom',
-                class: classIndex >= 0 ? String(cells[classIndex] || '').replace(/"/g, '') : '',
+                id: String(id).replace(/"/g, '').trim(),
+                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom').replace(/"/g, '').trim() : 'Sans nom',
+                class: classIndex >= 0 ? String(cells[classIndex] || '').replace(/"/g, '').trim() : '',
                 paid: paidIndex >= 0 ? Number(String(cells[paidIndex] || '0').replace(/[^\d.-]/g, '')) || 0 : 0,
                 total: totalIndex >= 0 ? Number(String(cells[totalIndex] || '0').replace(/[^\d.-]/g, '')) || 0 : 0,
-                photo: photoIndex >= 0 ? String(cells[photoIndex] || '').replace(/"/g, '') : '',
-                sex: sexIndex >= 0 ? String(cells[sexIndex] || '').replace(/"/g, '') : '',
-                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '').replace(/"/g, '') : '',
-                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026').replace(/"/g, '') : '2025-2026',
-                date: dateIndex >= 0 ? String(cells[dateIndex] || '').replace(/"/g, '') : ''
+                photo: photoIndex >= 0 ? String(cells[photoIndex] || '').replace(/"/g, '').trim() : '',
+                sex: sexIndex >= 0 ? String(cells[sexIndex] || '').replace(/"/g, '').trim() : '',
+                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '').replace(/"/g, '').trim() : '',
+                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026').replace(/"/g, '').trim() : '2025-2026',
+                date: dateIndex >= 0 ? String(cells[dateIndex] || '').replace(/"/g, '').trim() : ''
             };
             
             sheetStudents.push(student);
-            console.log(`✅ Élève chargé: ${student.id} - ${student.name}`);
         }
         
         console.log(`📊 Total élèves parsés: ${sheetStudents.length}`);
@@ -799,19 +803,6 @@ function convertCSVToStudents(csvText) {
     } catch(error) {
         console.error('❌ Erreur parsing CSV:', error);
         return null;
-    }
-}
-
-// ════════════════════════════════════════════════════════════════
-// 💾 LOCAL STORAGE MANAGEMENT
-// ════════════════════════════════════════════════════════════════
-
-function saveLocal() {
-    try {
-        localStorage.setItem('spm_students', JSON.stringify(students));
-        console.log('💾 Données sauvegardées localement');
-    } catch(error) {
-        console.warn('⚠️ Erreur lors de la sauvegarde locale:', error);
     }
 }
 
@@ -841,6 +832,7 @@ function hideSections() {
 
 async function searchById() {
     const idInput = document.getElementById('searchIdInput');
+    const searchBtn = document.getElementById('searchBtn');
     const id = idInput.value.trim().toUpperCase();
     const resultContainer = document.getElementById('searchResultById');
     const loader = document.getElementById('searchCardLoader');
@@ -850,50 +842,92 @@ async function searchById() {
         return;
     }
 
-    console.log(`🔍 Recherche de: ${id}`);
-    console.log(`📦 Élèves disponibles:`, students.map(s => s.id));
-
-    // Clear previous results
+    // Prevent double submission
+    if (isSearching) return;
+    isSearching = true;
+    
+    // Disable button and show loading
+    searchBtn.disabled = true;
+    searchBtn.classList.add('opacity-50');
+    loader.classList.remove('hidden');
     resultContainer.innerHTML = '';
     resultContainer.style.opacity = '0';
-    loader.classList.remove('hidden');
 
-    // Simulate network delay for effect
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    loader.classList.add('hidden');
+    console.log(`🔍 Recherche de: ${id}`);
 
-    // Search for student - case insensitive
-    let student = students.find(s => s.id.trim().toUpperCase() === id);
+    try {
+        // Fetch fresh data from Google Sheets EVERY search
+        updateSyncStatus(false);
+        const freshData = await fetchFreshDataFromGoogleSheets();
+        
+        if (!freshData) {
+            throw new Error('Impossible de récupérer les données');
+        }
 
-    if (!student) {
-        console.warn(`❌ Élève non trouvé: ${id}`);
-        resultContainer.innerHTML = buildNotFoundCard(id);
+        // Search in fresh data
+        let student = freshData.find(s => s.id.trim().toUpperCase() === id);
+
+        // Smooth transition
+        await new Promise(resolve => setTimeout(resolve, 400));
+        loader.classList.add('hidden');
+
+        if (!student) {
+            console.warn(`❌ Élève non trouvé: ${id}`);
+            resultContainer.innerHTML = buildNotFoundCard(id);
+            resultContainer.style.opacity = '1';
+            updateSyncStatus(true);
+        } else {
+            console.log(`✅ Élève trouvé:`, student);
+            resultContainer.innerHTML = buildPremiumStudentCard(student);
+            resultContainer.style.opacity = '1';
+            updateSyncStatus(true);
+        }
+
+    } catch(error) {
+        console.error('❌ Erreur de recherche:', error);
+        loader.classList.add('hidden');
+        resultContainer.innerHTML = buildErrorCard(error.message);
         resultContainer.style.opacity = '1';
-        return;
+        updateSyncStatus(false);
+    } finally {
+        // Re-enable button
+        isSearching = false;
+        searchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-50');
     }
-
-    console.log(`✅ Élève trouvé:`, student);
-    // Build and display result
-    resultContainer.innerHTML = buildPremiumStudentCard(student);
-    resultContainer.style.opacity = '1';
 }
 
 // ════════════════════════════════════════════════════════════════
 // 🎨 CARD BUILDERS
 // ════════════════════════════════════════════════════════════════
 
+function buildErrorCard(errorMessage) {
+    return `
+        <div class="glass-premium border border-red-500/30 bg-gradient-to-br from-red-950/20 to-red-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-lg fade-in">
+            <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-2">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-red-400">Erreur de Connexion</h3>
+            <p class="text-gray-300 text-base max-w-md">${errorMessage || 'Une erreur est survenue lors de la récupération des données. Vérifiez votre connexion internet.'}</p>
+            <span class="text-xs text-gray-500">Assurez-vous d\'avoir une connexion internet stable et réessayez.</span>
+            <button onclick="searchById()" class="mt-4 gradient-btn-blue px-6 py-2 rounded-lg text-sm font-bold transition-all hover:shadow-lg">
+                <i class="fas fa-redo mr-2"></i>Réessayer
+            </button>
+        </div>
+    `;
+}
+
 function buildNotFoundCard(id) {
     return `
-        <div class="glass-premium border border-red-500/30 bg-gradient-to-br from-red-950/20 to-red-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-lg">
-            <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-2">
+        <div class="glass-premium border border-yellow-500/30 bg-gradient-to-br from-yellow-950/20 to-yellow-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-lg fade-in">
+            <div class="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400 mb-2">
                 <i class="fas fa-user-slash text-3xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-red-400">Élève Introuvable</h3>
-            <p class="text-gray-300 text-base max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-3 py-1 rounded text-sm">${id}</span> ne correspond à aucun dossier actif.</p>
-            <span class="text-xs text-gray-500">Vérifiez la syntaxe ou contactez le guichet de l'établissement.</span>
-            <button onclick="document.getElementById('searchIdInput').focus()" class="mt-4 gradient-btn-blue px-6 py-2 rounded-lg text-sm font-bold">
-                <i class="fas fa-redo mr-2"></i>Nouvelle recherche
+            <h3 class="text-2xl font-bold text-yellow-400">Élève Introuvable</h3>
+            <p class="text-gray-300 text-base max-w-md">L'identifiant <span class="font-mono text-white bg-white/10 px-3 py-1 rounded text-sm">${id}</span> ne correspond à aucun élève enregistré.</p>
+            <span class="text-xs text-gray-500">Vérifiez la syntaxe ou contactez le secrétariat de l'établissement.</span>
+            <button onclick="document.getElementById('searchIdInput').focus()" class="mt-4 gradient-btn-blue px-6 py-2 rounded-lg text-sm font-bold transition-all hover:shadow-lg">
+                <i class="fas fa-search mr-2"></i>Nouvelle recherche
             </button>
         </div>
     `;
@@ -911,12 +945,14 @@ function formatDate(dateStr) {
 
 function updateSyncStatus(synced) {
     const statusEl = document.getElementById('syncStatus');
+    const syncIcon = document.getElementById('syncIcon');
+    
     if (synced) {
-        statusEl.textContent = '✅ Synchronisé';
-        statusEl.classList.remove('animate-spin');
+        statusEl.textContent = '✅ À jour';
+        syncIcon.classList.remove('animate-spin');
     } else {
-        statusEl.textContent = '⏳ Synchronisation...';
-        statusEl.parentElement.querySelector('i').classList.add('animate-spin');
+        statusEl.textContent = '⏳ Chargement...';
+        syncIcon.classList.add('animate-spin');
     }
 }
 
@@ -1000,91 +1036,84 @@ function buildPremiumStudentCard(s) {
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
                                 
                                 <!-- ID -->
-                                <div class="col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">ID Étudiant</p>
-                                    <p class="font-mono text-sm md:text-base font-semibold text-blue-400">${s.id}</p>
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">ID Étudiant</span>
+                                    <span class="font-mono font-bold text-sm text-emerald-400">${s.id}</span>
                                 </div>
                                 
-                                <!-- CLASS -->
-                                <div class="col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Classe</p>
-                                    <p class="text-sm md:text-base font-semibold text-white">${s.class || 'N/A'}</p>
+                                <!-- Classe -->
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Classe</span>
+                                    <span class="font-semibold text-sm text-white">${s.class || 'N/A'}</span>
                                 </div>
                                 
-                                <!-- GENDER -->
-                                <div class="col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Genre</p>
-                                    <p class="text-sm md:text-base font-semibold text-gray-300">
-                                        ${s.sex === 'M' ? '👨 Masculin' : s.sex === 'F' ? '👩 Féminin' : s.sex || 'N/A'}
-                                    </p>
+                                <!-- Sexe -->
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Sexe</span>
+                                    <span class="font-semibold text-sm text-white">${s.sex || 'N/A'}</span>
                                 </div>
                                 
-                                <!-- PHONE -->
-                                <div class="col-span-2 md:col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Contact</p>
-                                    <p class="text-sm md:text-base font-mono text-gray-300">${s.phone || 'Non renseigné'}</p>
+                                <!-- Téléphone -->
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Téléphone</span>
+                                    <span class="font-semibold text-sm text-blue-400">${s.phone || 'N/A'}</span>
                                 </div>
                                 
-                                <!-- YEAR -->
-                                <div class="col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Année</p>
-                                    <p class="text-sm md:text-base font-semibold text-emerald-400">${s.year}</p>
+                                <!-- Date paiement -->
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Date Paiement</span>
+                                    <span class="font-semibold text-sm text-gray-300">${formatDate(s.date)}</span>
                                 </div>
                                 
-                                <!-- DATE -->
-                                <div class="col-span-1">
-                                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Dernier Paiement</p>
-                                    <p class="text-sm md:text-base font-semibold text-gray-300">${s.date ? formatDate(s.date) : 'Aucun'}</p>
+                                <!-- Année scolaire -->
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Année</span>
+                                    <span class="font-semibold text-sm text-gray-300">${s.year}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 💰 FINANCIAL SECTION -->
-                        <div class="border-t border-white/10 pt-6 md:pt-8">
+                        <div class="space-y-4">
                             
-                            <!-- PROGRESS SECTION -->
-                            <div class="mb-8">
-                                <div class="flex justify-between items-center mb-4">
-                                    <span class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider">État du Paiement</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg md:text-2xl font-black text-emerald-400 stat-number">${percentagePaid}%</span>
-                                        <span class="text-xs text-gray-500">complété</span>
-                                    </div>
+                            <!-- PROGRESS BAR -->
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Progression du paiement</span>
+                                    <span class="stat-number text-lg font-black text-emerald-400">${percentagePaid}%</span>
                                 </div>
-                                
-                                <!-- PROGRESS BAR -->
                                 <div class="progress-container">
-                                    <div 
-                                        class="progress-fill" 
-                                        style="width: ${Math.min(percentagePaid, 100)}%; --progress-width: ${Math.min(percentagePaid, 100)}%;"
-                                    ></div>
+                                    <div class="progress-fill" style="--progress-width: ${percentagePaid}%"></div>
                                 </div>
-                                
-                                <!-- PROGRESS TEXT -->
-                                <p class="text-xs text-gray-400 mt-3">
-                                    ${percentagePaid === 100 ? '✅ Paiement intégralement complété' : `Restant: ${remaining.toLocaleString()} FC`}
-                                </p>
                             </div>
 
-                            <!-- FINANCIAL CARDS -->
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-2xl p-4 md:p-6 text-center">
-                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Montant Total</p>
-                                    <p class="text-xl md:text-2xl font-black text-blue-300 stat-number">${total.toLocaleString()}</p>
-                                    <p class="text-xs text-gray-500 mt-2">FC</p>
+                            <!-- FINANCIAL GRID -->
+                            <div class="grid grid-cols-3 gap-3 p-4 rounded-xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
+                                
+                                <div class="flex flex-col items-center">
+                                    <span class="text-xs text-gray-400 mb-1">Total Dû</span>
+                                    <span class="stat-number text-sm md:text-base font-bold text-blue-400">${(total / 1000).toFixed(0)}k</span>
                                 </div>
                                 
-                                <div class="bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-2xl p-4 md:p-6 text-center">
-                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Payé</p>
-                                    <p class="text-xl md:text-2xl font-black text-green-300 stat-number">${paid.toLocaleString()}</p>
-                                    <p class="text-xs text-gray-500 mt-2">FC</p>
+                                <div class="flex flex-col items-center border-l border-r border-white/10">
+                                    <span class="text-xs text-gray-400 mb-1">Payé</span>
+                                    <span class="stat-number text-sm md:text-base font-bold text-emerald-400">${(paid / 1000).toFixed(0)}k</span>
                                 </div>
                                 
-                                <div class="bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl p-4 md:p-6 text-center">
-                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Restant</p>
-                                    <p class="text-xl md:text-2xl font-black text-red-300 stat-number">${remaining.toLocaleString()}</p>
-                                    <p class="text-xs text-gray-500 mt-2">FC</p>
+                                <div class="flex flex-col items-center">
+                                    <span class="text-xs text-gray-400 mb-1">Solde</span>
+                                    <span class="stat-number text-sm md:text-base font-bold ${remaining > 0 ? 'text-red-400' : 'text-emerald-400'}">${(remaining / 1000).toFixed(0)}k</span>
                                 </div>
+                            </div>
+
+                            <!-- ACTION BUTTONS -->
+                            <div class="flex gap-3 pt-4">
+                                <button onclick="document.getElementById('searchIdInput').value=''; document.getElementById('searchIdInput').focus();" class="flex-1 gradient-btn-blue px-4 py-2 rounded-lg text-sm font-bold transition-all hover:shadow-lg">
+                                    <i class="fas fa-search mr-2"></i>Nouvelle recherche
+                                </button>
+                                <button onclick="hideSections()" class="flex-1 px-4 py-2 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 border border-white/20 transition-all">
+                                    <i class="fas fa-times mr-2"></i>Fermer
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1095,5 +1124,7 @@ function buildPremiumStudentCard(s) {
 }
 
 </script>
+</head>
+<body class="text-white overflow-x-hidden">
 </body>
 </html>
