@@ -528,7 +528,7 @@ body {
 
             <!-- CTA Button -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onclick="showSearchById()" class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all">
+                <button onclick="showSearchById()" class="gradient-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl">
                     <i class="fas fa-id-card"></i>
                     <span>Recherche par ID</span>
                 </button>
@@ -625,10 +625,10 @@ let isSyncing = false;
 const DEMO_STUDENTS = [
     { id: 'STD-2026-001', name: 'Jean Kalala', photo: '', class: '5e Commerciale', sex: 'M', phone: '+243812345678', total: 600000, paid: 600000, year: '2025-2026', date: '2026-01-15' },
     { id: 'STU001', name: 'Mukendi Jean', photo: 'https://i.pravatar.cc/150?img=12', class: '4HSC A', sex: 'M', phone: '+243812345678', total: 500000, paid: 500000, year: '2025-2026', date: '2025-09-10' },
-    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-08-20' },
+    { id: 'STU002', name: 'Kabongo Marie', photo: 'https://i.pravatar.cc/150?img=47', class: '1ère Primaire A', sex: 'F', phone: '+243823456789', total: 300000, paid: 200000, year: '2025-2026', date: '2025-10-05' },
     { id: 'STU003', name: 'Tshibanda Paul', photo: 'https://i.pravatar.cc/150?img=15', class: '4HSC A', sex: 'M', phone: '+243834567890', total: 500000, paid: 0, year: '2025-2026', date: '' },
     { id: 'STU004', name: 'Ngoyi Esther', photo: '', class: '1ère Humanité Commerciale', sex: 'F', phone: '+243845678901', total: 600000, paid: 600000, year: '2025-2026', date: '2025-10-20' },
-    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-11-05' },
+    { id: 'STU005', name: 'Ilunga David', photo: 'https://i.pravatar.cc/150?img=33', class: '2ème Primaire B', sex: 'M', phone: '+243856789012', total: 350000, paid: 200000, year: '2025-2026', date: '2025-11-03' },
 ];
 
 // ════════════════════════════════════════════════════════════════
@@ -699,8 +699,39 @@ async function loadFromGoogleSheets() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 📝 CSV PARSER
+// 📝 CSV PARSER - IMPROVED FOR GOOGLE SHEETS
 // ════════════════════════════════════════════════════════════════
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let insideQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (insideQuotes && line[i + 1] === '"') {
+                // Escaped quote
+                current += '"';
+                i++;
+            } else {
+                // Toggle quote state
+                insideQuotes = !insideQuotes;
+            }
+        } else if (char === ',' && !insideQuotes) {
+            // End of field
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    // Add last field
+    result.push(current.trim());
+    return result;
+}
 
 function convertCSVToStudents(csvText) {
     try {
@@ -710,8 +741,11 @@ function convertCSVToStudents(csvText) {
             return null;
         }
         
-        // Parse headers (case-insensitive)
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        // Parse header line with proper CSV parsing
+        const headerCells = parseCSVLine(lines[0]);
+        const headers = headerCells.map(h => h.toLowerCase().replace(/"/g, ''));
+        
+        console.log('📋 Headers trouvés:', headers);
         
         // Find column indices
         const idIndex = headers.findIndex(h => h.includes('id'));
@@ -725,33 +759,39 @@ function convertCSVToStudents(csvText) {
         const yearIndex = headers.findIndex(h => h.includes('year') || h.includes('année'));
         const dateIndex = headers.findIndex(h => h.includes('date'));
         
+        console.log(`🔍 Indices trouvés - ID: ${idIndex}, Name: ${nameIndex}, Class: ${classIndex}, Paid: ${paidIndex}, Total: ${totalIndex}`);
+        
         if (idIndex === -1) {
-            console.error('❌ Colonne ID non trouvée');
+            console.error('❌ Colonne ID non trouvée. Headers disponibles:', headers);
             return null;
         }
         
         // Parse students
         const sheetStudents = [];
         for (let i = 1; i < lines.length; i++) {
-            const cells = lines[i].split(',').map(c => c.trim());
+            const cells = parseCSVLine(lines[i]);
             const id = cells[idIndex];
             
             if (!id) continue;
             
-            sheetStudents.push({
-                id: String(id),
-                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom') : 'Sans nom',
-                class: classIndex >= 0 ? String(cells[classIndex] || '') : '',
-                paid: paidIndex >= 0 ? Number(cells[paidIndex]) || 0 : 0,
-                total: totalIndex >= 0 ? Number(cells[totalIndex]) || 0 : 0,
-                photo: photoIndex >= 0 ? String(cells[photoIndex] || '') : '',
-                sex: sexIndex >= 0 ? String(cells[sexIndex] || '') : '',
-                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '') : '',
-                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026') : '2025-2026',
-                date: dateIndex >= 0 ? String(cells[dateIndex] || '') : ''
-            });
+            const student = {
+                id: String(id).replace(/"/g, ''),
+                name: nameIndex >= 0 ? String(cells[nameIndex] || 'Sans nom').replace(/"/g, '') : 'Sans nom',
+                class: classIndex >= 0 ? String(cells[classIndex] || '').replace(/"/g, '') : '',
+                paid: paidIndex >= 0 ? Number(String(cells[paidIndex] || '0').replace(/[^\d.-]/g, '')) || 0 : 0,
+                total: totalIndex >= 0 ? Number(String(cells[totalIndex] || '0').replace(/[^\d.-]/g, '')) || 0 : 0,
+                photo: photoIndex >= 0 ? String(cells[photoIndex] || '').replace(/"/g, '') : '',
+                sex: sexIndex >= 0 ? String(cells[sexIndex] || '').replace(/"/g, '') : '',
+                phone: phoneIndex >= 0 ? String(cells[phoneIndex] || '').replace(/"/g, '') : '',
+                year: yearIndex >= 0 ? String(cells[yearIndex] || '2025-2026').replace(/"/g, '') : '2025-2026',
+                date: dateIndex >= 0 ? String(cells[dateIndex] || '').replace(/"/g, '') : ''
+            };
+            
+            sheetStudents.push(student);
+            console.log(`✅ Élève chargé: ${student.id} - ${student.name}`);
         }
         
+        console.log(`📊 Total élèves parsés: ${sheetStudents.length}`);
         return sheetStudents.length > 0 ? sheetStudents : null;
     } catch(error) {
         console.error('❌ Erreur parsing CSV:', error);
@@ -807,6 +847,9 @@ async function searchById() {
         return;
     }
 
+    console.log(`🔍 Recherche de: ${id}`);
+    console.log(`📦 Élèves disponibles:`, students.map(s => s.id));
+
     // Clear previous results
     resultContainer.innerHTML = '';
     resultContainer.style.opacity = '0';
@@ -817,15 +860,17 @@ async function searchById() {
     
     loader.classList.add('hidden');
 
-    // Search for student
+    // Search for student - case insensitive
     let student = students.find(s => s.id.trim().toUpperCase() === id);
 
     if (!student) {
+        console.warn(`❌ Élève non trouvé: ${id}`);
         resultContainer.innerHTML = buildNotFoundCard(id);
         resultContainer.style.opacity = '1';
         return;
     }
 
+    console.log(`✅ Élève trouvé:`, student);
     // Build and display result
     resultContainer.innerHTML = buildPremiumStudentCard(student);
     resultContainer.style.opacity = '1';
@@ -837,7 +882,7 @@ async function searchById() {
 
 function buildNotFoundCard(id) {
     return `
-        <div class="glass-premium border border-red-500/30 bg-gradient-to-br from-red-950/20 to-red-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-xl backdrop-blur-md fade-in">
+        <div class="glass-premium border border-red-500/30 bg-gradient-to-br from-red-950/20 to-red-900/10 rounded-2xl p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center gap-4 shadow-lg">
             <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-2">
                 <i class="fas fa-user-slash text-3xl"></i>
             </div>
@@ -849,6 +894,27 @@ function buildNotFoundCard(id) {
             </button>
         </div>
     `;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch(e) {
+        return dateStr;
+    }
+}
+
+function updateSyncStatus(synced) {
+    const statusEl = document.getElementById('syncStatus');
+    if (synced) {
+        statusEl.textContent = '✅ Synchronisé';
+        statusEl.classList.remove('animate-spin');
+    } else {
+        statusEl.textContent = '⏳ Synchronisation...';
+        statusEl.parentElement.querySelector('i').classList.add('animate-spin');
+    }
 }
 
 function buildPremiumStudentCard(s) {
@@ -998,257 +1064,33 @@ function buildPremiumStudentCard(s) {
                             </div>
 
                             <!-- FINANCIAL CARDS -->
-                            <div class="grid grid-cols-3 gap-3 md:gap-4">
-                                
-                                <!-- TOTAL -->
-                                <div class="glass rounded-xl p-4 md:p-5 text-center border border-white/10">
-                                    <span class="text-xs text-gray-400 block uppercase font-bold tracking-wider mb-2">Frais Total</span>
-                                    <span class="text-lg md:text-2xl font-extrabold text-white stat-number">${total.toLocaleString()}</span>
-                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-2xl p-4 md:p-6 text-center">
+                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Montant Total</p>
+                                    <p class="text-xl md:text-2xl font-black text-blue-300 stat-number">${total.toLocaleString()}</p>
+                                    <p class="text-xs text-gray-500 mt-2">FC</p>
                                 </div>
                                 
-                                <!-- PAID -->
-                                <div class="glass rounded-xl p-4 md:p-5 text-center border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
-                                    <span class="text-xs text-emerald-400 block uppercase font-bold tracking-wider mb-2">Payé</span>
-                                    <span class="text-lg md:text-2xl font-extrabold text-emerald-400 stat-number">${paid.toLocaleString()}</span>
-                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                                <div class="bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-2xl p-4 md:p-6 text-center">
+                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Payé</p>
+                                    <p class="text-xl md:text-2xl font-black text-green-300 stat-number">${paid.toLocaleString()}</p>
+                                    <p class="text-xs text-gray-500 mt-2">FC</p>
                                 </div>
                                 
-                                <!-- REMAINING -->
-                                <div class="glass rounded-xl p-4 md:p-5 text-center border ${remaining > 0 ? 'border-red-500/20 bg-gradient-to-br from-red-500/5' : 'border-green-500/20 bg-gradient-to-br from-green-500/5'} to-transparent">
-                                    <span class="text-xs ${remaining > 0 ? 'text-red-400' : 'text-green-400'} block uppercase font-bold tracking-wider mb-2">Reste</span>
-                                    <span class="text-lg md:text-2xl font-extrabold ${remaining > 0 ? 'text-red-400' : 'text-green-400'} stat-number">${remaining.toLocaleString()}</span>
-                                    <span class="text-xs text-gray-500 block mt-1">FC</span>
+                                <div class="bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl p-4 md:p-6 text-center">
+                                    <p class="text-xs md:text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">Restant</p>
+                                    <p class="text-xl md:text-2xl font-black text-red-300 stat-number">${remaining.toLocaleString()}</p>
+                                    <p class="text-xs text-gray-500 mt-2">FC</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- 🎯 ACTION BUTTONS -->
-                <div class="flex gap-3 mt-8 md:mt-10 flex-wrap justify-center lg:justify-start border-t border-white/10 pt-6 md:pt-8">
-                    <button 
-                        onclick="printStudentCard('${s.id}')" 
-                        class="gradient-btn px-6 py-2 rounded-lg text-sm md:text-base font-bold flex items-center gap-2 shadow-lg"
-                    >
-                        <i class="fas fa-print"></i>
-                        <span>Imprimer</span>
-                    </button>
-                    <button 
-                        onclick="document.getElementById('searchIdInput').focus(); document.getElementById('searchIdInput').value = '';" 
-                        class="gradient-btn-blue px-6 py-2 rounded-lg text-sm md:text-base font-bold flex items-center gap-2 shadow-lg"
-                    >
-                        <i class="fas fa-search"></i>
-                        <span>Nouvelle Recherche</span>
-                    </button>
                 </div>
             </div>
         </div>
     `;
 }
 
-// ════════════════════════════════════════════════════════════════
-// 🖨️ PRINT FUNCTIONS
-// ════════════════════════════════════════════════════════════════
-
-function printStudentCard(studentId) {
-    const student = students.find(s => s.id === studentId);
-    if (!student) return;
-    
-    const total = Number(student.total) || 0;
-    const paid = Number(student.paid) || 0;
-    const remaining = total - paid;
-    const percentagePaid = total > 0 ? Math.round((paid / total) * 100) : 0;
-    
-    const html = `
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-            <meta charset="UTF-8">
-            <title>Fiche Élève - ${student.name}</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { 
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    padding: 20px; 
-                    background: #f5f5f5; 
-                }
-                .container { max-width: 800px; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin: 0 auto; }
-                .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #10b981; padding-bottom: 20px; }
-                .header h1 { color: #10b981; font-size: 32px; margin-bottom: 5px; }
-                .header p { color: #6b7280; font-size: 14px; }
-                .section { margin-bottom: 30px; }
-                .section-title { font-size: 14px; color: #6b7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 15px; }
-                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-                .info-item { padding: 15px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #10b981; }
-                .info-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
-                .info-value { font-size: 16px; font-weight: 600; color: #1f2937; }
-                .finances { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-                .finance-box { 
-                    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-                    padding: 20px; 
-                    border-radius: 8px; 
-                    text-align: center; 
-                    border: 2px solid #e5e7eb;
-                }
-                .finance-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
-                .finance-value { font-size: 24px; font-weight: 700; color: #1f2937; }
-                .progress-section { margin: 30px 0; }
-                .progress-bar { width: 100%; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin: 15px 0; }
-                .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: ${percentagePaid}%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
-                .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
-                @media print { body { background: white; padding: 0; } .container { box-shadow: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📋 Fiche de Suivi Élève</h1>
-                    <p>School Payment Manager - RDC</p>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">Informations Personnelles</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label">Identifiant</div>
-                            <div class="info-value">${student.id}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Nom Complet</div>
-                            <div class="info-value">${student.name}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Classe</div>
-                            <div class="info-value">${student.class || 'N/A'}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Année Scolaire</div>
-                            <div class="info-value">${student.year}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">État Financier</div>
-                    <div class="finances">
-                        <div class="finance-box">
-                            <div class="finance-label">💰 Frais Total</div>
-                            <div class="finance-value">${total.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
-                        </div>
-                        <div class="finance-box" style="border-color: #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%);">
-                            <div class="finance-label" style="color: #10b981;">✅ Montant Payé</div>
-                            <div class="finance-value" style="color: #10b981;">${paid.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
-                        </div>
-                        <div class="finance-box" style="border-color: #ef4444; background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.05) 100%);">
-                            <div class="finance-label" style="color: #ef4444;">📌 Reste Obligatoire</div>
-                            <div class="finance-value" style="color: #ef4444;">${remaining.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">FC</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="progress-section">
-                    <div class="section-title">Progression du Paiement</div>
-                    <p style="margin-bottom: 10px; color: #1f2937; font-weight: 600;">${percentagePaid}% Complété</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill">${percentagePaid}%</div>
-                    </div>
-                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
-                        ${percentagePaid === 100 ? '✅ Paiement intégralement complété' : `Solde à payer: ${remaining.toLocaleString()} FC`}
-                    </p>
-                </div>
-
-                <div class="footer">
-                    <p>Généré le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                    <p style="margin-top: 10px;">Pour toute question: <strong>contact@schoolpayment.cd</strong></p>
-                    <p style="margin-top: 15px; font-size: 11px;">Document officiel - School Payment Manager © 2026</p>
-                </div>
-            </div>
-        </body>
-        </html>
-    `;
-    
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
-    printWindow.document.write(html);
-    printWindow.document.close();
-    
-    setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-    }, 500);
-}
-
-// ════════════════════════════════════════════════════════════════
-// 🛠️ UTILITY FUNCTIONS
-// ════════════════════════════════════════════════════════════════
-
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    } catch {
-        return dateString;
-    }
-}
-
-function updateSyncStatus(success) {
-    const syncStatus = document.getElementById('syncStatus');
-    if (success) {
-        syncStatus.textContent = '✅ Synchronisé';
-        syncStatus.style.color = '#10b981';
-    } else {
-        syncStatus.textContent = '⚠️ Hors ligne';
-        syncStatus.style.color = '#f59e0b';
-    }
-}
-
-function showLoading() {
-    document.getElementById('loading').classList.remove('hidden');
-}
-
-function hideLoading() {
-    document.getElementById('loading').classList.add('hidden');
-}
-
-// ════════════════════════════════════════════════════════════════
-// ⌨️ KEYBOARD SHORTCUTS
-// ════════════════════════════════════════════════════════════════
-
-document.addEventListener('keydown', (e) => {
-    // Ctrl+K or Cmd+K to focus search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        showSearchById();
-    }
-    
-    // Escape to close search
-    if (e.key === 'Escape') {
-        hideSections();
-    }
-});
-
-// ════════════════════════════════════════════════════════════════
-// 🔄 AUTO-SYNC TIMER (Every 5 minutes)
-// ════════════════════════════════════════════════════════════════
-
-setInterval(() => {
-    if (!isSyncing) {
-        isSyncing = true;
-        loadFromGoogleSheets().then(() => {
-            isSyncing = false;
-        });
-    }
-}, 5 * 60 * 1000); // 5 minutes
-
 </script>
-
 </body>
 </html>
