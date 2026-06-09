@@ -1,138 +1,155 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcademyPay | Dashboard Administratif</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .cyber-blue { color: #38bdf8; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Admin Dash</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial;
+    background:#0a0f1f;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+/* SCREEN 1 */
+#home{
+    text-align:center;
+}
+
+h1{
+    font-size:40px;
+    color:#4ea1ff;
+    letter-spacing:2px;
+}
+
+button{
+    background:#1f6fff;
+    border:none;
+    padding:12px 20px;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+    margin-top:20px;
+}
+
+/* SCREEN 2 */
+#app{
+    display:none;
+    width:90%;
+    max-width:800px;
+}
+
+.search{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+input{
+    flex:1;
+    padding:10px;
+    border-radius:8px;
+    border:none;
+    outline:none;
+}
+
+.card{
+    background:#111a33;
+    padding:10px;
+    margin:10px 0;
+    border-radius:10px;
+}
+</style>
 </head>
-<body class="text-slate-100 min-h-screen p-4 md:p-8" x-data="schoolApp()">
 
-    <!-- Header -->
-    <header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-            <h1 class="text-3xl font-bold tracking-tight">Academy<span class="cyber-blue">Pay</span></h1>
-            <p class="text-slate-400">Dashboard de gestion financière 2026</p>
-        </div>
-        <div class="flex gap-3">
-            <button @click="fetchData()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition">Actualiser</button>
-        </div>
-    </header>
+<body>
 
-    <!-- Search Section -->
-    <section class="glass p-6 rounded-2xl mb-8">
-        <div class="grid md:grid-cols-3 gap-4">
-            <input type="text" x-model="searchClass" placeholder="Rechercher une classe (ex: 4HSCA)" 
-                   class="bg-slate-900 border border-slate-700 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full">
-            <button @click="searchData()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-900/20">
-                LANCER LA RECHERCHE
-            </button>
-            <select x-model="filterSex" class="bg-slate-900 border border-slate-700 p-3 rounded-xl outline-none">
-                <option value="">Tous les sexes</option>
-                <option value="M">Masculin</option>
-                <option value="F">Féminin</option>
-            </select>
-        </div>
-    </section>
+<!-- HOME -->
+<div id="home">
+    <h1>SCHOOL ADMIN DASH</h1>
+    <button onclick="openApp()">Analyser les classes</button>
+</div>
 
-    <!-- Statistics -->
-    <div x-show="results.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="glass p-5 rounded-xl">
-            <p class="text-slate-400 text-sm">Effectif trouvé</p>
-            <p class="text-2xl font-bold" x-text="results.length"></p>
-        </div>
-        <div class="glass p-5 rounded-xl">
-            <p class="text-slate-400 text-sm">Total payé</p>
-            <p class="text-2xl font-bold text-emerald-400" x-text="stats.paid + '$'"></p>
-        </div>
-        <div class="glass p-5 rounded-xl">
-            <p class="text-slate-400 text-sm">Reste à percevoir</p>
-            <p class="text-2xl font-bold text-red-400" x-text="stats.remaining + '$'"></p>
-        </div>
+<!-- APP -->
+<div id="app">
+
+    <div class="search">
+        <input id="query" placeholder="Tape une classe ex: 4HSCA">
+        <button onclick="search()">Rechercher</button>
     </div>
 
-    <!-- Data List -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        <template x-for="student in results" :key="student.id">
-            <div class="glass p-6 rounded-2xl hover:border-blue-500 transition-all duration-300">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 class="text-lg font-semibold" x-text="student.name"></h3>
-                        <p class="text-sm text-slate-400" x-text="student.class + ' • ' + student.sex"></p>
-                    </div>
-                    <span :class="student.paid >= student.total ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'" 
-                          class="px-2 py-1 rounded text-xs font-bold" 
-                          x-text="student.paid >= student.total ? 'PAYÉ' : 'EN COURS'"></span>
-                </div>
-                <div class="space-y-2 text-sm text-slate-300">
-                    <p>Téléphone: <span x-text="student.phone"></span></p>
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
-                        <p>Total: <span class="font-bold" x-text="student.total + '$'"></span></p>
-                        <p>Payé: <span class="font-bold text-blue-400" x-text="student.paid + '$'"></span></p>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
+    <div id="results"></div>
 
-    <!-- Loading Overlay -->
-    <div x-show="loading" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center backdrop-blur-sm z-50">
-        <div class="text-center">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-blue-400 font-semibold uppercase tracking-widest">Connexion sécurisée...</p>
-        </div>
-    </div>
+</div>
 
-    <script>
-        function schoolApp() {
-            return {
-                loading: false,
-                allData: [],
-                results: [],
-                searchClass: '',
-                filterSex: '',
-                stats: { paid: 0, remaining: 0 },
+<script>
 
-                async fetchData() {
-                    this.loading = true;
-                    // Utilisation d'un paramètre timestamp pour éviter le cache navigateur
-                    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv&t=${Date.now()}`;
-                    
-                    Papa.parse(url, {
-                        download: true,
-                        header: true,
-                        complete: (res) => {
-                            this.allData = res.data.filter(d => d.id).map(d => ({
-                                ...d,
-                                total: parseFloat(d.total) || 0,
-                                paid: parseFloat(d.paid) || 0
-                            }));
-                            this.loading = false;
-                        }
-                    });
-                },
+const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv";
 
-                searchData() {
-                    let filtered = this.allData.filter(d => 
-                        d.class.toLowerCase() === this.searchClass.toLowerCase() &&
-                        (this.filterSex === '' || d.sex === this.filterSex)
-                    );
-                    
-                    this.results = filtered.sort((a, b) => a.name.localeCompare(b.name));
-                    
-                    this.stats.paid = this.results.reduce((acc, curr) => acc + curr.paid, 0);
-                    this.stats.remaining = this.results.reduce((acc, curr) => acc + (curr.total - curr.paid), 0);
-                }
-            }
+function openApp(){
+    document.getElementById("home").style.display="none";
+    document.getElementById("app").style.display="block";
+}
+
+async function fetchData(){
+    const res = await fetch(URL + "&t=" + Date.now());
+    const text = await res.text();
+
+    return text.split("\n").slice(1).map(r=>{
+        const c = r.split(",");
+        return {
+            name:c[1],
+            class:c[2],
+            sex:c[3],
+            phone:c[4],
+            total:Number(c[5]||0),
+            paid:Number(c[6]||0),
+            date:c[8]
         }
-    </script>
+    });
+}
+
+async function search(){
+    const q = document.getElementById("query").value.trim();
+
+    const data = await fetchData();
+
+    const filtered = data.filter(e => e.class === q);
+
+    const box = document.getElementById("results");
+    box.innerHTML = "";
+
+    if(filtered.length === 0){
+        box.innerHTML = "<p>Aucun résultat</p>";
+        return;
+    }
+
+    filtered.forEach(e=>{
+        const div = document.createElement("div");
+        div.className="card";
+
+        div.innerHTML = `
+            <b>${e.name}</b><br>
+            Classe: ${e.class}<br>
+            Sexe: ${e.sex}<br>
+            Tel: ${e.phone}<br>
+            Total: ${e.total}<br>
+            Payé: ${e.paid}<br>
+            Reste: ${e.total - e.paid}<br>
+            Date: ${e.date}
+        `;
+
+        box.appendChild(div);
+    });
+}
+
+</script>
+
 </body>
 </html>
