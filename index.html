@@ -1,155 +1,699 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Admin Dash</title>
-
+<title>EduTrack — Suivi Scolaire</title>
 <style>
-body{
-    margin:0;
-    font-family: Arial;
-    background:#0a0f1f;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* SCREEN 1 */
-#home{
-    text-align:center;
-}
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-h1{
-    font-size:40px;
-    color:#4ea1ff;
-    letter-spacing:2px;
-}
+  .bg-animated {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 20%, #1a1f3a 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, #0f1f2e 0%, transparent 50%),
+                #0a0e1a;
+  }
 
-button{
-    background:#1f6fff;
-    border:none;
-    padding:12px 20px;
-    color:white;
-    border-radius:8px;
-    cursor:pointer;
-    margin-top:20px;
-}
+  .particles {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .particle {
+    position: absolute; border-radius: 50%;
+    background: rgba(99,179,237,0.15);
+    animation: float linear infinite;
+  }
 
-/* SCREEN 2 */
-#app{
-    display:none;
-    width:90%;
-    max-width:800px;
-}
+  @keyframes float {
+    from { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    to { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
 
-.search{
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
-}
+  .wrapper { position: relative; z-index: 1; }
 
-input{
-    flex:1;
-    padding:10px;
-    border-radius:8px;
-    border:none;
-    outline:none;
-}
+  header {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
 
-.card{
-    background:#111a33;
-    padding:10px;
-    margin:10px 0;
-    border-radius:10px;
-}
+  .logo-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: inline-block;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(99,179,237,0.4)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(99,179,237,0.8)); }
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #63b3ed, #a78bfa, #f687b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    animation: slideDown 0.8s ease;
+  }
+
+  .subtitle {
+    color: #718096;
+    font-size: 1.1rem;
+    animation: slideDown 0.8s ease 0.1s both;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 20px;
+    animation: fadeIn 1s ease 0.3s both;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    color: #a0aec0;
+    backdrop-filter: blur(10px);
+  }
+  .stat-chip span { color: #63b3ed; font-weight: 700; }
+
+  .search-section {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 1s ease 0.4s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .search-btn {
+    background: linear-gradient(135deg, #3182ce, #7c3aed);
+    border: none;
+    color: white;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 30px rgba(99,179,237,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .search-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(99,179,237,0.5);
+  }
+
+  .search-btn:active { transform: scale(0.97); }
+
+  .search-icon { font-size: 1.3rem; }
+
+  .search-panel {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 20px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
+    opacity: 0;
+  }
+
+  .search-panel.open {
+    max-height: 200px;
+    opacity: 1;
+  }
+
+  .search-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 16px;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 1rem;
+    color: #e2e8f0;
+    outline: none;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+  }
+
+  .search-input::placeholder { color: #4a5568; }
+
+  .search-input:focus {
+    border-color: #63b3ed;
+    background: rgba(99,179,237,0.08);
+    box-shadow: 0 0 0 3px rgba(99,179,237,0.15);
+  }
+
+  .go-btn {
+    background: linear-gradient(135deg, #3182ce, #7c3aed);
+    border: none;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .go-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99,179,237,0.4); }
+  .go-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .hint {
+    color: #4a5568;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .results-section {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .class-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #63b3ed, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .results-meta {
+    color: #718096;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    background: #48bb78;
+    border-radius: 50%;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; box-shadow: 0 0 4px #48bb78; }
+    50% { opacity: 0.3; box-shadow: none; }
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .sum-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .sum-card:hover { transform: translateY(-2px); }
+
+  .sum-label {
+    font-size: 0.75rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .sum-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+
+  .sum-value.blue { color: #63b3ed; }
+  .sum-value.green { color: #68d391; }
+  .sum-value.yellow { color: #f6ad55; }
+  .sum-value.red { color: #fc8181; }
+
+  .table-wrapper {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead {
+    background: rgba(99,179,237,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  th {
+    padding: 14px 16px;
+    font-size: 0.75rem;
+    color: #63b3ed;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.2s;
+    animation: rowIn 0.4s ease both;
+  }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+  td {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    color: #cbd5e0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-paid {
+    background: rgba(72,187,120,0.15);
+    color: #68d391;
+    border: 1px solid rgba(72,187,120,0.3);
+  }
+
+  .badge-partial {
+    background: rgba(246,173,85,0.15);
+    color: #f6ad55;
+    border: 1px solid rgba(246,173,85,0.3);
+  }
+
+  .badge-unpaid {
+    background: rgba(252,129,129,0.15);
+    color: #fc8181;
+    border: 1px solid rgba(252,129,129,0.3);
+  }
+
+  .badge-m { background: rgba(99,179,237,0.1); color: #63b3ed; }
+  .badge-f { background: rgba(246,135,177,0.1); color: #f687b3; }
+
+  .id-num { color: #4a5568; font-size: 0.8rem; font-family: monospace; }
+
+  .loading-overlay {
+    text-align: center;
+    padding: 60px 20px;
+    color: #4a5568;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(99,179,237,0.2);
+    border-top-color: #63b3ed;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    text-align: center;
+    padding: 40px;
+    color: #fc8181;
+  }
+
+  .empty-msg {
+    text-align: center;
+    padding: 60px 20px;
+    color: #4a5568;
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+    min-width: 80px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .fill-green { background: linear-gradient(90deg, #48bb78, #68d391); }
+  .fill-yellow { background: linear-gradient(90deg, #ed8936, #f6ad55); }
+  .fill-red { background: linear-gradient(90deg, #e53e3e, #fc8181); }
+
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #2d3748;
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 640px) {
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(8), td:nth-child(8),
+    th:nth-child(9), td:nth-child(9) { display: none; }
+    .sum-value { font-size: 1.3rem; }
+  }
 </style>
 </head>
-
 <body>
 
-<!-- HOME -->
-<div id="home">
-    <h1>SCHOOL ADMIN DASH</h1>
-    <button onclick="openApp()">Analyser les classes</button>
-</div>
+<div class="bg-animated"></div>
+<div class="particles" id="particles"></div>
 
-<!-- APP -->
-<div id="app">
+<div class="wrapper">
+  <header>
+    <div class="logo-icon">🎓</div>
+    <h1>EduTrack</h1>
+    <p class="subtitle">Système de Suivi Scolaire — Données en temps réel</p>
+  </header>
 
-    <div class="search">
-        <input id="query" placeholder="Tape une classe ex: 4HSCA">
-        <button onclick="search()">Rechercher</button>
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-chip">Élèves: <span id="totalStudents">—</span></div>
+    <div class="stat-chip">Payé: <span id="totalPaid">—</span></div>
+    <div class="stat-chip">En attente: <span id="totalPending">—</span></div>
+    <div class="stat-chip" id="lastUpdate">Actualisation en cours...</div>
+  </div>
+
+  <div class="search-section">
+    <button class="search-btn" id="toggleSearchBtn" onclick="toggleSearch()">
+      <span class="search-icon">🔍</span>
+      Rechercher une classe
+    </button>
+  </div>
+
+  <div class="search-panel" id="searchPanel">
+    <div class="search-box">
+      <div class="input-group">
+        <input
+          class="search-input"
+          id="classInput"
+          type="text"
+          placeholder="Ex : 4HSCA, 3ème B, Terminale..."
+          onkeydown="if(event.key==='Enter') search()"
+          autocomplete="off"
+        />
+        <button class="go-btn" id="goBtn" onclick="search()">Rechercher</button>
+      </div>
+      <p class="hint">Entrez le nom ou code de la classe puis appuyez sur Entrée ou cliquez sur Rechercher</p>
     </div>
+  </div>
 
-    <div id="results"></div>
+  <div class="results-section" id="resultsSection"></div>
 
+  <footer>EduTrack &copy; 2025 — Données synchronisées depuis Google Sheets</footer>
 </div>
 
 <script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv";
 
-const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv";
+let allData = [];
+let searchOpen = false;
+let lastFetchTime = null;
 
-function openApp(){
-    document.getElementById("home").style.display="none";
-    document.getElementById("app").style.display="block";
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 2;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*20+15}s;
+      animation-delay:${Math.random()*15}s;
+    `;
+    container.appendChild(p);
+  }
 }
 
-async function fetchData(){
-    const res = await fetch(URL + "&t=" + Date.now());
-    const text = await res.text();
+function toggleSearch() {
+  searchOpen = !searchOpen;
+  const panel = document.getElementById('searchPanel');
+  const btn = document.getElementById('toggleSearchBtn');
+  panel.classList.toggle('open', searchOpen);
+  btn.innerHTML = searchOpen
+    ? '<span class="search-icon">✕</span> Fermer'
+    : '<span class="search-icon">🔍</span> Rechercher une classe';
+  if (searchOpen) setTimeout(() => document.getElementById('classInput').focus(), 300);
+}
 
-    return text.split("\n").slice(1).map(r=>{
-        const c = r.split(",");
-        return {
-            name:c[1],
-            class:c[2],
-            sex:c[3],
-            phone:c[4],
-            total:Number(c[5]||0),
-            paid:Number(c[6]||0),
-            date:c[8]
-        }
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase().trim());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g) || [];
+    const obj = {};
+    headers.forEach((h, idx) => {
+      obj[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim();
     });
+    if (Object.values(obj).some(v => v)) rows.push(obj);
+  }
+  return rows;
 }
 
-async function search(){
-    const q = document.getElementById("query").value.trim();
+function normalizeKey(obj) {
+  const norm = {};
+  for (const [k, v] of Object.entries(obj)) {
+    norm[k.replace(/\s+/g, '')] = v;
+  }
+  return norm;
+}
 
-    const data = await fetchData();
+async function fetchData() {
+  const url = `${SHEET_URL}&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Erreur réseau ' + res.status);
+  const text = await res.text();
+  allData = parseCSV(text).map(normalizeKey);
+  lastFetchTime = new Date();
+  updateGlobalStats();
+}
 
-    const filtered = data.filter(e => e.class === q);
+function updateGlobalStats() {
+  const total = allData.length;
+  let paid = 0, pending = 0;
+  allData.forEach(r => {
+    const p = parseFloat(r.paid || r.payed || 0);
+    const t = parseFloat(r.total || 0);
+    if (t > 0 && p >= t) paid++;
+    else pending++;
+  });
+  document.getElementById('totalStudents').textContent = total;
+  document.getElementById('totalPaid').textContent = paid;
+  document.getElementById('totalPending').textContent = pending;
+  const now = lastFetchTime;
+  const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('lastUpdate').innerHTML = `<span class="live-dot" style="display:inline-block;width:8px;height:8px;background:#48bb78;border-radius:50%;animation:blink 2s infinite;margin-right:6px;vertical-align:middle;"></span> Mis à jour : ${timeStr}`;
+}
 
-    const box = document.getElementById("results");
-    box.innerHTML = "";
+function payStatus(paid, total) {
+  const p = parseFloat(paid || 0);
+  const t = parseFloat(total || 0);
+  if (t === 0) return { label: '—', cls: '' };
+  const pct = (p / t) * 100;
+  if (pct >= 100) return { label: '✓ Soldé', cls: 'badge-paid', pct: 100, fillCls: 'fill-green' };
+  if (pct > 0) return { label: `⚑ Partiel`, cls: 'badge-partial', pct, fillCls: 'fill-yellow' };
+  return { label: '✗ Impayé', cls: 'badge-unpaid', pct: 0, fillCls: 'fill-red' };
+}
 
-    if(filtered.length === 0){
-        box.innerHTML = "<p>Aucun résultat</p>";
-        return;
+function fmtMoney(val) {
+  const n = parseFloat(val || 0);
+  if (isNaN(n)) return val || '—';
+  return n.toLocaleString('fr-FR') + ' FCFA';
+}
+
+function search() {
+  const query = document.getElementById('classInput').value.trim().toUpperCase();
+  if (!query) return;
+
+  const section = document.getElementById('resultsSection');
+  section.innerHTML = `<div class="loading-overlay"><div class="spinner"></div><p>Recherche de la classe <strong>${query}</strong>...</p></div>`;
+
+  fetchData().then(() => {
+    const found = allData.filter(r => {
+      const cls = (r['class'] || r.classe || r.class_ || '').toUpperCase().trim();
+      return cls === query || cls.includes(query);
+    });
+
+    if (!found.length) {
+      section.innerHTML = `
+        <div class="empty-msg">
+          <div class="empty-icon">🔎</div>
+          <p style="font-size:1.1rem; color:#a0aec0; margin-bottom:8px;">Aucun élève trouvé pour <strong style="color:#63b3ed;">${query}</strong></p>
+          <p style="color:#4a5568; font-size:0.9rem;">Vérifiez le code de classe (ex : 4HSCA, 3eme)</p>
+        </div>`;
+      return;
     }
 
-    filtered.forEach(e=>{
-        const div = document.createElement("div");
-        div.className="card";
-
-        div.innerHTML = `
-            <b>${e.name}</b><br>
-            Classe: ${e.class}<br>
-            Sexe: ${e.sex}<br>
-            Tel: ${e.phone}<br>
-            Total: ${e.total}<br>
-            Payé: ${e.paid}<br>
-            Reste: ${e.total - e.paid}<br>
-            Date: ${e.date}
-        `;
-
-        box.appendChild(div);
+    let totalF = 0, totalP = 0, countPaid = 0, countUnpaid = 0;
+    found.forEach(r => {
+      totalF += parseFloat(r.total || 0);
+      totalP += parseFloat(r.paid || r.payed || 0);
+      const st = payStatus(r.paid || r.payed, r.total);
+      if (st.cls === 'badge-paid') countPaid++;
+      else if (st.cls === 'badge-unpaid') countUnpaid++;
     });
+
+    const rows = found.map((r, i) => {
+      const st = payStatus(r.paid || r.payed, r.total);
+      const sexBadge = (r.sex || r.genre || '').toUpperCase() === 'F'
+        ? '<span class="badge badge-f">♀ F</span>'
+        : '<span class="badge badge-m">♂ M</span>';
+      const pct = st.pct !== undefined ? Math.round(st.pct) : 0;
+      return `<tr style="animation-delay:${i*0.04}s">
+        <td><span class="id-num">#${r.id || i+1}</span></td>
+        <td><strong style="color:#e2e8f0;">${r.name || r.nom || '—'}</strong></td>
+        <td>${sexBadge}</td>
+        <td style="font-family:monospace; color:#a0aec0; font-size:0.82rem;">${r.phone || r.tel || '—'}</td>
+        <td>${fmtMoney(r.total)}</td>
+        <td>
+          ${fmtMoney(r.paid || r.payed)}
+          ${st.pct !== undefined ? `<div class="progress-bar"><div class="progress-fill ${st.fillCls}" style="width:${pct}%"></div></div>` : ''}
+        </td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+        <td style="color:#4a5568; font-size:0.8rem;">${r.year || r.annee || '—'}</td>
+        <td style="color:#4a5568; font-size:0.8rem;">${r.date || '—'}</td>
+      </tr>`;
+    }).join('');
+
+    section.innerHTML = `
+      <div class="results-header">
+        <div>
+          <p class="class-title">Classe : ${query}</p>
+          <p style="color:#718096; font-size:0.85rem; margin-top:4px;">${found.length} élève${found.length > 1 ? 's' : ''} trouvé${found.length > 1 ? 's' : ''}</p>
+        </div>
+        <div class="results-meta">
+          <div class="live-dot"></div>
+          Données en direct
+        </div>
+      </div>
+
+      <div class="summary-cards">
+        <div class="sum-card">
+          <div class="sum-label">Total élèves</div>
+          <div class="sum-value blue">${found.length}</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-label">Frais totaux</div>
+          <div class="sum-value yellow">${fmtMoney(totalF)}</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-label">Montant payé</div>
+          <div class="sum-value green">${fmtMoney(totalP)}</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-label">Restant dû</div>
+          <div class="sum-value red">${fmtMoney(totalF - totalP)}</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-label">Soldés</div>
+          <div class="sum-value green">${countPaid}</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-label">Impayés</div>
+          <div class="sum-value red">${countUnpaid}</div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Sexe</th>
+              <th>Téléphone</th>
+              <th>Total</th>
+              <th>Payé</th>
+              <th>Statut</th>
+              <th>Année</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }).catch(err => {
+    section.innerHTML = `<div class="error-msg">❌ Erreur de chargement : ${err.message}<br><small style="color:#4a5568">Vérifiez la connexion internet ou le lien Google Sheet</small></div>`;
+  });
 }
 
+createParticles();
+fetchData().catch(() => {});
 </script>
-
 </body>
 </html>
