@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -385,7 +384,7 @@ async function doSearch() {
     const paid  = getField(r,'paid','payed');
     const year  = getField(r,'year','annee','année');
     const date  = getField(r,'date');
-    const st    = payStatus(paid, total);
+    const st    = payStatus(parseFloat(paid)||0, parseFloat(total)||0);
     const sexBadge = sex==='F'
       ? '<span class="badge badge-f">♀ F</span>'
       : sex==='M' ? '<span class="badge badge-m">♂ M</span>'
