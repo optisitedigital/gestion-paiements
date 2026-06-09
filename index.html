@@ -3,580 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Payment Manager | SaaS</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>AcademyPay | Dashboard Administratif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* =========================================
-           VARIABLES ET RESET
-           ========================================= */
-        :root {
-            --bg-color: #0A192F; /* Bleu foncé premium */
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-main: #FFFFFF;
-            --text-muted: #8892B0;
-            --primary: #2E8B57; /* Vert éducation */
-            --primary-hover: #3CB371;
-            --danger: #FF4C4C;
-            --warning: #F5A623;
-            --success: #2E8B57;
-            --info: #3b82f6;
-        }
-
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at top right, rgba(46, 139, 87, 0.15), transparent 400px);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-        }
-
-        /* =========================================
-           ANIMATIONS & SPLASH SCREEN
-           ========================================= */
-        .fade-in { animation: fadeIn 0.5s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .splash-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--bg-color);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 9999;
-            transition: opacity 0.6s ease;
-        }
-        .splash-screen.hidden { opacity: 0; pointer-events: none; }
-        .logo-container { text-align: center; animation: pulse 2s infinite; }
-        .logo-icon { font-size: 4rem; color: var(--primary); margin-bottom: 10px; }
-        @keyframes pulse { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(0.95); } }
-
-        /* =========================================
-           STRUCTURE GLOBALE & GLASSMORPHISM
-           ========================================= */
-        .dashboard {
-            width: 100%; max-width: 650px;
-            margin-top: 20px;
-        }
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            margin-bottom: 20px;
-        }
-
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .header-brand { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; color: var(--primary); font-weight: bold;}
-
-        /* =========================================
-           SYSTEME D'ONGLETS (TABS)
-           ========================================= */
-        .tabs {
-            display: flex;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 5px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid var(--card-border);
-        }
-        .tab-btn {
-            flex: 1; padding: 12px; background: none; border: none;
-            color: var(--text-muted); font-weight: 600; font-size: 0.95rem;
-            cursor: pointer; border-radius: 8px; transition: 0.3s;
-        }
-        .tab-btn.active {
-            background: var(--primary); color: #fff;
-            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.3);
-        }
-
-        /* =========================================
-           FORMULAIRES & INPUTS
-           ========================================= */
-        h3 { margin-bottom: 15px; font-weight: 600; font-size: 1.1rem; }
-        .input-group { position: relative; margin-bottom: 15px; }
-        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-        input {
-            width: 100%; padding: 15px 15px 15px 45px;
-            border-radius: 12px; border: 1px solid var(--card-border);
-            background: rgba(255, 255, 255, 0.05); color: #fff;
-            font-size: 1rem; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(46, 139, 87, 0.3); }
-
-        .btn-primary {
-            width: 100%; padding: 15px; border-radius: 12px; border: none;
-            background: var(--primary); color: #fff; font-size: 1rem; font-weight: 600;
-            cursor: pointer; transition: 0.3s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-        /* Loader & Utilitaires */
-        .loader-container { text-align: center; padding: 30px 0; }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 0 auto 15px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .hidden { display: none !important; }
-
-        /* =========================================
-           CARTE RÉSULTAT : MODE ÉTUDIANT SOLO
-           ========================================= */
-        .profile-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid var(--card-border); padding-bottom: 20px; }
-        .student-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background-color: var(--card-bg);}
-        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin: 5px 0 10px; }
-
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;}
-        .badge.success { background: rgba(46, 139, 87, 0.2); color: var(--success); border: 1px solid var(--success); }
-        .badge.warning { background: rgba(245, 166, 35, 0.2); color: var(--warning); border: 1px solid var(--warning); }
-        .badge.danger { background: rgba(255, 76, 76, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-
-        .details-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .detail-item { display: flex; flex-direction: column; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;}
-        .detail-item .label { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .detail-item .value { font-weight: 600; font-size: 0.95rem; }
-
-        .finance-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .finance-card { padding: 15px; border-radius: 12px; text-align: center; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); position: relative; overflow: hidden;}
-        .finance-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
-        .finance-card.total::before { background: var(--info); }
-        .finance-card.paid::before { background: var(--success); }
-        .finance-card.balance::before { background: var(--warning); }
-        .finance-card span { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px; }
-        .finance-card h3 { font-size: 1.2rem; font-weight: 700; }
-        .finance-card.total h3 { color: #fff; }
-        .finance-card.paid h3 { color: var(--success); }
-        .finance-card.balance h3 { color: var(--warning); }
-        .finance-card.danger-balance h3 { color: var(--danger); }
-        .finance-card.danger-balance::before { background: var(--danger); }
-
-        /* =========================================
-           CARTE RÉSULTAT : MODE CLASSE (LISTE)
-           ========================================= */
-        .class-header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
-        .class-counter { background: rgba(46, 139, 87, 0.2); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
-        
-        .student-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px;}
-        /* Scrollbar personnalisée */
-        .student-list::-webkit-scrollbar { width: 6px; }
-        .student-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
-        .student-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-        .student-list-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255, 255, 255, 0.02); padding: 14px 20px;
-            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: 0.2s;
-        }
-        .student-list-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--primary); }
-        
-        .student-left { display: flex; align-items: center; gap: 15px; }
-        .student-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
-        .student-meta h4 { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 2px;}
-        .student-meta span { font-size: 0.8rem; color: var(--text-muted); }
-        
-        .student-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-        .student-pay-value { font-weight: 700; font-size: 1.1rem; }
-        .student-pay-value.complete { color: var(--success); }
-        .student-pay-value.partial { color: var(--warning); }
-        .student-pay-value.zero { color: var(--danger); }
-
-        /* =========================================
-           ÉTATS VIDES ET NOTIFICATIONS
-           ========================================= */
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
-
-        .toast {
-            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 12px 24px; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: bottom 0.3s ease;
-            z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 10px;
-        }
-        .toast.show { bottom: 30px; }
-        .toast.error { background: var(--danger); }
-        .toast.success { background: var(--success); }
-        .toast.info { background: var(--info); }
-
-        /* Responsive Mobile */
-        @media (max-width: 600px) {
-            .finance-section, .details-grid { grid-template-columns: 1fr; }
-            .profile-header { flex-direction: column; text-align: center; }
-            .student-list-item { flex-direction: column; text-align: center; gap: 15px;}
-            .student-left { flex-direction: column; }
-            .student-right { align-items: center; }
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .cyber-blue { color: #38bdf8; }
     </style>
 </head>
-<body>
-    
-    <div id="splash-screen" class="splash-screen">
-        <div class="logo-container">
-            <i class="fa-solid fa-graduation-cap logo-icon"></i>
-            <h1>School Payment<br><span style="color:var(--text-main);">Manager</span></h1>
+<body class="text-slate-100 min-h-screen p-4 md:p-8" x-data="schoolApp()">
+
+    <!-- Header -->
+    <header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight">Academy<span class="cyber-blue">Pay</span></h1>
+            <p class="text-slate-400">Dashboard de gestion financière 2026</p>
+        </div>
+        <div class="flex gap-3">
+            <button @click="fetchData()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition">Actualiser</button>
+        </div>
+    </header>
+
+    <!-- Search Section -->
+    <section class="glass p-6 rounded-2xl mb-8">
+        <div class="grid md:grid-cols-3 gap-4">
+            <input type="text" x-model="searchClass" placeholder="Rechercher une classe (ex: 4HSCA)" 
+                   class="bg-slate-900 border border-slate-700 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full">
+            <button @click="searchData()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-900/20">
+                LANCER LA RECHERCHE
+            </button>
+            <select x-model="filterSex" class="bg-slate-900 border border-slate-700 p-3 rounded-xl outline-none">
+                <option value="">Tous les sexes</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- Statistics -->
+    <div x-show="results.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="glass p-5 rounded-xl">
+            <p class="text-slate-400 text-sm">Effectif trouvé</p>
+            <p class="text-2xl font-bold" x-text="results.length"></p>
+        </div>
+        <div class="glass p-5 rounded-xl">
+            <p class="text-slate-400 text-sm">Total payé</p>
+            <p class="text-2xl font-bold text-emerald-400" x-text="stats.paid + '$'"></p>
+        </div>
+        <div class="glass p-5 rounded-xl">
+            <p class="text-slate-400 text-sm">Reste à percevoir</p>
+            <p class="text-2xl font-bold text-red-400" x-text="stats.remaining + '$'"></p>
         </div>
     </div>
 
-    <main class="dashboard fade-in">
-        <header>
-            <div class="header-brand">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <span>SPM Tracker</span>
+    <!-- Data List -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <template x-for="student in results" :key="student.id">
+            <div class="glass p-6 rounded-2xl hover:border-blue-500 transition-all duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold" x-text="student.name"></h3>
+                        <p class="text-sm text-slate-400" x-text="student.class + ' • ' + student.sex"></p>
+                    </div>
+                    <span :class="student.paid >= student.total ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'" 
+                          class="px-2 py-1 rounded text-xs font-bold" 
+                          x-text="student.paid >= student.total ? 'PAYÉ' : 'EN COURS'"></span>
+                </div>
+                <div class="space-y-2 text-sm text-slate-300">
+                    <p>Téléphone: <span x-text="student.phone"></span></p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
+                        <p>Total: <span class="font-bold" x-text="student.total + '$'"></span></p>
+                        <p>Payé: <span class="font-bold text-blue-400" x-text="student.paid + '$'"></span></p>
+                    </div>
+                </div>
             </div>
-        </header>
+        </template>
+    </div>
 
-        <div class="tabs">
-            <button class="tab-btn active" id="tab-class"><i class="fa-solid fa-users"></i> Recherche Classe</button>
+    <!-- Loading Overlay -->
+    <div x-show="loading" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center backdrop-blur-sm z-50">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-blue-400 font-semibold uppercase tracking-widest">Connexion sécurisée...</p>
         </div>
-
-        <section class="search-section glass-card">
-            
-            
-
-            <form id="form-class" >
-                <h3>Filtrer par Classe</h3>
-                <div class="input-group">
-                    <i class="fa-solid fa-users-rectangle"></i>
-                    <input type="text" id="class-name" placeholder="Entrez la classe (ex: 4 em hsc/A)" autocomplete="off">
-                </div>
-                <button type="submit" class="btn-primary" id="btn-class" style="background-color: var(--info);">
-                    <i class="fa-solid fa-filter"></i> Afficher la classe
-                </button>
-            </form>
-        </section>
-
-        <div id="loader" class="loader-container hidden">
-            <div class="spinner"></div>
-            <p>Synchronisation avec la base de données...</p>
-        </div>
-
-        <div id="empty-state" class="empty-state">
-            <i class="fa-solid fa-folder-open"></i>
-            <p id="empty-text">Sélectionnez un mode et lancez une recherche.</p>
-        </div>
-
-        <section id="result-card" class="result-card glass-card hidden">
-            <div class="profile-header">
-                <img id="res-photo" src="" alt="Photo étudiant" class="student-photo" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Student&background=2E8B57&color=fff';">
-                <div class="profile-info">
-                    <h2 id="res-name">-</h2>
-                    <p class="subtitle"><i class="fa-solid fa-chalkboard-user"></i> <span id="res-class">-</span> | <span id="res-year">-</span></p>
-                    <span id="payment-badge" class="badge">-</span>
-                </div>
-            </div>
-
-            <div class="details-grid">
-                <div class="detail-item">
-                    <span class="label">ID Système</span>
-                    <span class="value" id="res-system-id">-</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Sexe</span>
-                    <span class="value" id="res-sex">-</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Dernière MaJ</span>
-                    <span class="value" id="res-date">-</span>
-                </div>
-            </div>
-
-            <div class="finance-section">
-                <div class="finance-card total">
-                    <span>Total à Payer</span>
-                    <h3 id="res-total">0 $</h3>
-                </div>
-                <div class="finance-card paid">
-                    <span>Montant Payé</span>
-                    <h3 id="res-paid">0 $</h3>
-                </div>
-                <div id="balance-card" class="finance-card balance">
-                    <span>Solde Restant</span>
-                    <h3 id="res-balance">0 $</h3>
-                </div>
-            </div>
-        </section>
-
-        <section id="class-result-card" class="glass-card hidden">
-            <div class="class-header-title">
-                <h3>Rapport de Classe : <span id="display-class-title" style="color:#fff;">-</span></h3>
-                <span id="class-badge-counter" class="class-counter">0 Élèves</span>
-            </div>
-            <div id="student-list-container" class="student-list">
-                </div>
-        </section>
-
-        <div id="toast" class="toast"></div>
-    </main>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. GESTION DU SPLASH SCREEN
-            setTimeout(() => {
-                document.getElementById('splash-screen').classList.add('hidden');
-            }, 1500);
+        function schoolApp() {
+            return {
+                loading: false,
+                allData: [],
+                results: [],
+                searchClass: '',
+                filterSex: '',
+                stats: { paid: 0, remaining: 0 },
 
-            // 2. RÉCUPÉRATION DES ÉLÉMENTS DU DOM
-            const tabId = document.getElementById('tab-id');
-            const tabClass = document.getElementById('tab-class');
-            const formId = document.getElementById('form-id');
-            const formClass = document.getElementById('form-class');
-            
-            const loader = document.getElementById('loader');
-            const emptyState = document.getElementById('empty-state');
-            const emptyText = document.getElementById('empty-text');
-            const resultCard = document.getElementById('result-card');
-            const classResultCard = document.getElementById('class-result-card');
-            const studentListContainer = document.getElementById('student-list-container');
-            const toast = document.getElementById('toast');
-
-            // URL Source du CSV Google Sheets
-            const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv";
-
-            // 3. LOGIQUE DE NAVIGATION (TABS)
-            tabId.addEventListener('click', () => {
-                tabClass.classList.remove('active');
-                tabId.classList.add('active');
-                formId.classList.remove('hidden');
-                formClass.classList.add('hidden');
-                resetUI();
-            });
-
-            tabClass.addEventListener('click', () => {
-                tabId.classList.remove('active');
-                tabClass.classList.add('active');
-                formClass.classList.remove('hidden');
-                formId.classList.add('hidden');
-                resetUI();
-            });
-
-            function resetUI() {
-                resultCard.classList.add('hidden');
-                classResultCard.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                emptyText.textContent = "Système prêt. Remplissez le champ pour lancer la recherche.";
-            }
-
-            // 4. MOTEUR DE RÉCUPÉRATION DES DONNÉES (FETCH PARTAGÉ)
-            async function fetchSchoolData() {
-                // Création d'une URL dynamique avec timestamp pour FORCER l'absence de cache
-                const urlWithNoCache = `${CSV_URL}&nocache=${Date.now()}`;
-                
-                const response = await fetch(urlWithNoCache, {
-                    method: 'GET',
-                    cache: 'no-store'
-                });
-
-                if (!response.ok) throw new Error("Erreur de connexion au serveur Google.");
-                const csvText = await response.text();
-
-                return new Promise((resolve, reject) => {
-                    Papa.parse(csvText, {
+                async fetchData() {
+                    this.loading = true;
+                    // Utilisation d'un paramètre timestamp pour éviter le cache navigateur
+                    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4s9hCjtsmSGohQ5QTa55OeVEifQIF76GATTIg-wgXAqlYZyx84UDZhJE8UsK8d8o0SN15FbbG9-M/pub?output=csv&t=${Date.now()}`;
+                    
+                    Papa.parse(url, {
+                        download: true,
                         header: true,
-                        skipEmptyLines: true,
-                        transformHeader: function(header) {
-                            return header.trim().toLowerCase(); // Règle le problème du "sex" vs "sexe"
-                        },
-                        complete: function(results) {
-                            resolve(results.data);
-                        },
-                        error: function(err) {
-                            reject(err);
+                        complete: (res) => {
+                            this.allData = res.data.filter(d => d.id).map(d => ({
+                                ...d,
+                                total: parseFloat(d.total) || 0,
+                                paid: parseFloat(d.paid) || 0
+                            }));
+                            this.loading = false;
                         }
                     });
-                });
-            }
+                },
 
-            // 5. ACTION : RECHERCHE PAR ID (SOLO)
-            formId.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const searchId = document.getElementById('student-id').value.trim();
-                if (!searchId) return;
-
-                prepareSearch();
-
-                try {
-                    const data = await fetchSchoolData();
-                    const student = data.find(row => row.id && row.id.trim() === searchId);
-
-                    loader.classList.add('hidden');
-
-                    if (student) {
-                        displaySingleData(student);
-                        showToast('<i class="fa-solid fa-check"></i> Étudiant trouvé', 'success');
-                    } else {
-                        showEmptyState(`Aucun étudiant trouvé pour l'ID : <b>${searchId}</b>`);
-                        showToast('<i class="fa-solid fa-xmark"></i> Introuvable', 'error');
-                    }
-                } catch (error) {
-                    handleError();
-                }
-            });
-
-            // 6. ACTION : RECHERCHE PAR CLASSE (MULTI)
-            formClass.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const searchClass = document.getElementById('class-name').value.trim().toLowerCase();
-                if (!searchClass) return;
-
-                prepareSearch();
-
-                try {
-                    const data = await fetchSchoolData();
-                    // On filtre pour garder tous les élèves de la classe demandée
-                    const classList = data.filter(row => row.class && row.class.trim().toLowerCase() === searchClass);
-
-                    loader.classList.add('hidden');
-
-                    if (classList.length > 0) {
-                        displayClassList(classList, document.getElementById('class-name').value.trim().toUpperCase());
-                        showToast(`<i class="fa-solid fa-users"></i> ${classList.length} élèves chargés`, 'info');
-                    } else {
-                        showEmptyState(`Aucune donnée pour la classe : <b>${searchClass}</b>`);
-                        showToast('<i class="fa-solid fa-xmark"></i> Classe vide', 'error');
-                    }
-                } catch (error) {
-                    handleError();
-                }
-            });
-
-            // 7. FONCTIONS D'AFFICHAGE ET D'UTILITAIRES
-            function prepareSearch() {
-                resultCard.classList.add('hidden');
-                classResultCard.classList.add('hidden');
-                emptyState.classList.add('hidden');
-                loader.classList.remove('hidden');
-            }
-
-            function handleError() {
-                loader.classList.add('hidden');
-                showEmptyState('Erreur réseau. Impossible de lire la base de données.', true);
-                showToast('Échec de la connexion', 'error');
-            }
-
-            // Affichage Étudiant Unique
-            function displaySingleData(data) {
-                const total = parseFloat(data.total) || 0;
-                const paid = parseFloat(data.paid) || 0;
-                const reste = total - paid;
-
-                document.getElementById('res-photo').src = (data.photo && data.photo !== '') ? data.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Student')}&background=2E8B57&color=fff`;
-                document.getElementById('res-name').textContent = data.name || 'Inconnu';
-                document.getElementById('res-class').textContent = data.class || '-';
-                document.getElementById('res-year').textContent = data.year || '-';
-                document.getElementById('res-system-id').textContent = data.id || '-';
-                
-                // Gestion sécurisée de l'entête sexe ou sex
-                document.getElementById('res-sex').textContent = data.sexe || data.sex || '-';
-                document.getElementById('res-date').textContent = data.date || '-';
-
-                document.getElementById('res-total').textContent = `${total} $`;
-                document.getElementById('res-paid').textContent = `${paid} $`;
-                document.getElementById('res-balance').textContent = `${reste} $`;
-
-                // Logique des badges
-                const badge = document.getElementById('payment-badge');
-                const balanceCard = document.getElementById('balance-card');
-                
-                if (total === 0) {
-                    badge.textContent = 'Non défini'; badge.className = 'badge';
-                    balanceCard.className = 'finance-card balance';
-                } else if (paid === 0) {
-                    badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Impayé'; badge.className = 'badge danger';
-                    balanceCard.className = 'finance-card danger-balance';
-                } else if (paid < total) {
-                    badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Acompte'; badge.className = 'badge warning';
-                    balanceCard.className = 'finance-card balance';
-                } else {
-                    badge.innerHTML = '<i class="fa-solid fa-check-circle"></i> Soldé'; badge.className = 'badge success';
-                    balanceCard.className = 'finance-card paid';
-                }
-
-                resultCard.classList.remove('hidden');
-                resultCard.classList.add('fade-in');
-            }
-
-            // Affichage Liste de Classe
-            function displayClassList(list, classNameDisplay) {
-                document.getElementById('display-class-title').textContent = classNameDisplay;
-                document.getElementById('class-badge-counter').textContent = `${list.length} Élève(s)`;
-                
-                // Vider le conteneur avant d'injecter
-                studentListContainer.innerHTML = ''; 
-
-                list.forEach(student => {
-                    const name = student.name ? student.name.trim() : 'Sans nom';
-                    const paid = parseFloat(student.paid) || 0;
-                    const total = parseFloat(student.total) || 0;
-                    const id = student.id || 'N/A';
+                searchData() {
+                    let filtered = this.allData.filter(d => 
+                        d.class.toLowerCase() === this.searchClass.toLowerCase() &&
+                        (this.filterSex === '' || d.sex === this.filterSex)
+                    );
                     
-                    const photoSrc = (student.photo && student.photo !== '') ? student.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
-
-                    // Gestion dynamique des statuts financiers
-                    let payClass = 'partial';
-                    let statusLabel = 'Acompte';
-                    if (paid >= total && total > 0) { payClass = 'complete'; statusLabel = 'Soldé'; }
-                    else if (paid === 0) { payClass = 'zero'; statusLabel = 'Impayé'; }
-
-                    const row = document.createElement('div');
-                    row.className = 'student-list-item';
-                    row.innerHTML = `
-                        <div class="student-left">
-                            <img src="${photoSrc}" alt="Avatar" class="student-avatar" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=2E8B57&color=fff';">
-                            <div class="student-meta">
-                                <h4>${name}</h4>
-                                <span>ID: ${id} | Sexe: ${student.sexe || student.sex || '-'}</span>
-                            </div>
-                        </div>
-                        <div class="student-right">
-                            <div class="student-pay-value ${payClass}">${paid} $</div>
-                            <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">${statusLabel} / ${total}$</span>
-                        </div>
-                    `;
-                    studentListContainer.appendChild(row);
-                });
-
-                classResultCard.classList.remove('hidden');
-                classResultCard.classList.add('fade-in');
-            }
-
-            // Gestion de l'état vide
-            function showEmptyState(message, showRetry = false) {
-                let html = `<i class="fa-solid fa-folder-open"></i><p>${message}</p>`;
-                if (showRetry) {
-                    html += `<button onclick="location.reload()" class="btn-primary" style="margin-top:15px; width:auto; padding: 10px 20px; display:inline-block; font-size:0.9rem;"><i class="fa-solid fa-rotate-right"></i> Recharger l'application</button>`;
+                    this.results = filtered.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    this.stats.paid = this.results.reduce((acc, curr) => acc + curr.paid, 0);
+                    this.stats.remaining = this.results.reduce((acc, curr) => acc + (curr.total - curr.paid), 0);
                 }
-                emptyState.innerHTML = html;
-                emptyState.classList.remove('hidden');
             }
-
-            // Gestion des notifications Toast
-            function showToast(messageHTML, type) {
-                toast.innerHTML = messageHTML;
-                toast.className = `toast show ${type}`;
-                setTimeout(() => {
-                    toast.className = 'toast';
-                }, 3500);
-            }
-        });
+        }
     </script>
 </body>
 </html>
