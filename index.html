@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -331,7 +332,7 @@ function payStatus(paidRaw, totalRaw) {
 
 function fmtMoney(val) {
   const n = parseFloat(val || 0);
-  return isNaN(n) ? (val || '—') : n.toLocaleString('fr-FR') + ' FCFA';
+  return isNaN(n) ? (val || '—') : n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' $';
 }
 
 function fmtPhone(phone) {
